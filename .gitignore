@@ -1,0 +1,27 @@
+# Maven target directories
+target/
+backend/target/
+
+# Local databases
+backend/data/
+
+# Log files
+*.log
+
+# Node modules & frontend distribution
+frontend/node_modules/
+frontend/dist/
+
+# OS/Editor specific files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Requested project context ignores
+/CAMPUS_POCKET_CONTEXT.md
+/PROJECT_NOTES.md
