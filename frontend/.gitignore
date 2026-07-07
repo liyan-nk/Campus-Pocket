@@ -11,8 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
-CAMPUS_POCKET_CONTEXT.md
-PROJECT_NOTES.md
+/CAMPUS_POCKET_CONTEXT.md
+/PROJECT_NOTES.md
 
 # Editor directories and files
 .vscode/*
