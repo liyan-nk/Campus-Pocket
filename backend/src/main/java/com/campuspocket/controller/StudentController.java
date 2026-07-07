@@ -1,0 +1,62 @@
+package com.campuspocket.controller;
+
+import com.campuspocket.dto.*;
+import com.campuspocket.model.Timetable;
+import com.campuspocket.service.StudentService;
+import com.campuspocket.service.StudentTimetableAttendanceService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/student")
+public class StudentController {
+
+    private final StudentService studentService;
+    private final StudentTimetableAttendanceService studentTimetableAttendanceService;
+
+    public StudentController(StudentService studentService, 
+                             StudentTimetableAttendanceService studentTimetableAttendanceService) {
+        this.studentService = studentService;
+        this.studentTimetableAttendanceService = studentTimetableAttendanceService;
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<StudentProfileResponse> getProfile(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentService.getStudentProfile(rollNo));
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<StudentDashboardResponse> getDashboard(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentTimetableAttendanceService.getStudentDashboard(rollNo));
+    }
+
+    @GetMapping("/timetable")
+    public ResponseEntity<List<Timetable>> getTimetable(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentTimetableAttendanceService.getStudentTimetable(rollNo));
+    }
+
+    @GetMapping("/attendance/summary")
+    public ResponseEntity<AttendanceSummaryResponse> getAttendanceSummary(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceSummary(rollNo));
+    }
+
+    @PostMapping("/attendance/mark")
+    public ResponseEntity<?> markAttendance(@Valid @RequestBody AttendanceMarkRequest request, Authentication authentication) {
+        String rollNo = authentication.getName();
+        try {
+            studentTimetableAttendanceService.markAttendance(rollNo, request);
+            return ResponseEntity.ok(Map.of("message", "Attendance status updated."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+}
