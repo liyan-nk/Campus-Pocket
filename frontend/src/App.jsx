@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import StudentLayout from './components/Layout/StudentLayout';
 import StudentLogin from './pages/student/Login';
 import ForcePassword from './pages/student/ForcePassword';
@@ -60,8 +61,9 @@ const AdminRootRedirect = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
         <Routes>
           {/* Public / Redirect Routes */}
           <Route path="/" element={<RootRedirect />} />
@@ -106,7 +108,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

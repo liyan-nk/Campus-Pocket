@@ -192,7 +192,7 @@ const Timetable = () => {
                   <div className="flex items-center">
                     <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
                     <span className="font-mono font-medium text-cp-text-primary">
-                      {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
+                      {(slot.startTime || '').substring(0, 5)} - {(slot.endTime || '').substring(0, 5)}
                     </span>
                   </div>
                   <div className="flex items-center">

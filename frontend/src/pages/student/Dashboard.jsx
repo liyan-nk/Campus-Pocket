@@ -160,7 +160,7 @@ const Dashboard = () => {
         <div>
           <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">{getGreeting()}</p>
           <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight leading-none mt-0.5">
-            Hello, {user?.name.split(' ')[0]}!
+            Hello, {user?.name?.split(' ')[0] || 'Student'}!
           </h2>
         </div>
         <Link 
@@ -170,7 +170,7 @@ const Dashboard = () => {
           {avatarMode === 'image' && avatarImage ? (
             <img src={avatarImage} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
-            <span>{avatarInitials || user?.name?.charAt(0)}</span>
+            <span>{avatarInitials || user?.name?.charAt(0) || 'S'}</span>
           )}
         </Link>
       </div>
@@ -210,14 +210,14 @@ const Dashboard = () => {
                   Upcoming
                 </span>
                 <h4 className="text-base font-display font-extrabold tracking-tight mt-1 leading-tight">
-                  {getSubjectName(data.nextClass.timetable)}
+                  {getSubjectName(data.nextClass?.timetable)}
                 </h4>
                 <p className="text-[10px] font-mono text-cp-text-on-accent/60 font-bold tracking-wider uppercase">
-                  {getSubjectCode(data.nextClass.timetable)}
+                  {getSubjectCode(data.nextClass?.timetable)}
                 </p>
               </div>
               <div className="w-9 h-9 bg-cp-text-on-accent/10 backdrop-blur-md rounded-xl flex items-center justify-center font-display font-extrabold text-xs border border-cp-text-on-accent/15 shrink-0">
-                {data.nextClass.timetable.room}
+                {data.nextClass?.timetable?.room || ''}
               </div>
             </div>
 
@@ -225,12 +225,12 @@ const Dashboard = () => {
               <div className="flex items-center">
                 <Clock className="w-3.5 h-3.5 mr-1.5" />
                 <span className="font-mono">
-                  {data.nextClass.timetable.startTime.substring(0, 5)} - {data.nextClass.timetable.endTime.substring(0, 5)}
+                  {(data.nextClass?.timetable?.startTime || '').substring(0, 5)} - {(data.nextClass?.timetable?.endTime || '').substring(0, 5)}
                 </span>
               </div>
               <div className="flex items-center">
                 <User className="w-3.5 h-3.5 mr-1 text-cp-text-on-accent/60" />
-                <span>{getFacultyName(data.nextClass.timetable)}</span>
+                <span>{getFacultyName(data.nextClass?.timetable)}</span>
               </div>
             </div>
           </div>
@@ -270,7 +270,7 @@ const Dashboard = () => {
 
               return (
                 <div 
-                  key={cls.timetable.id} 
+                  key={cls?.timetable?.id || Math.random()} 
                   className={`bg-cp-surface border rounded-2xl p-3 flex items-center justify-between transition-all duration-300 shadow-[0_1px_2px_rgba(0,0,0,0.01)] ${
                     markedPresent ? 'border-green-200/50 bg-green-500/5' :
                     markedAbsent ? 'border-red-200/50 bg-red-500/5' :
@@ -279,15 +279,15 @@ const Dashboard = () => {
                 >
                   {/* Left Metadata */}
                   <div className="space-y-0.5 max-w-[200px] truncate">
-                    <h4 className="text-xs font-bold text-cp-text-primary truncate">{getSubjectName(cls.timetable)}</h4>
+                    <h4 className="text-xs font-bold text-cp-text-primary truncate">{getSubjectName(cls?.timetable)}</h4>
                     <div className="flex items-center space-x-2 text-[10px] text-cp-text-secondary">
                       <span className="font-mono flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
-                        {cls.timetable.startTime.substring(0, 5)}
+                        {(cls?.timetable?.startTime || '').substring(0, 5)}
                       </span>
                       <span className="flex items-center">
                         <MapPin className="w-3 h-3 mr-1" />
-                        {cls.timetable.room}
+                        {cls?.timetable?.room || ''}
                       </span>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ const Dashboard = () => {
                   <div className="flex items-center space-x-1.5">
                     {/* PRESENT Toggle */}
                     <button
-                      onClick={() => handleMarkAttendance(cls.timetable.id, 'PRESENT')}
+                      onClick={() => cls?.timetable?.id && handleMarkAttendance(cls.timetable.id, 'PRESENT')}
                       disabled={markingId !== null}
                       className={`p-1.5 rounded-lg transition-all flex items-center justify-center border ${
                         markedPresent
@@ -309,7 +309,7 @@ const Dashboard = () => {
 
                     {/* ABSENT Toggle */}
                     <button
-                      onClick={() => handleMarkAttendance(cls.timetable.id, 'ABSENT')}
+                      onClick={() => cls?.timetable?.id && handleMarkAttendance(cls.timetable.id, 'ABSENT')}
                       disabled={markingId !== null}
                       className={`p-1.5 rounded-lg transition-all flex items-center justify-center border ${
                         markedAbsent
