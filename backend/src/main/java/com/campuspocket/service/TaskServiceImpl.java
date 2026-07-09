@@ -32,6 +32,10 @@ public class TaskServiceImpl implements TaskService {
         Student student = studentRepository.findByRollNo(rollNo)
             .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
+        if (request.getDueDate() != null && request.getDueDate().isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Deadline cannot be in the past.");
+        }
+
         Task task = new Task(
             student,
             request.getTitle().trim(),
@@ -52,6 +56,10 @@ public class TaskServiceImpl implements TaskService {
         // Enforce ownership check
         if (!task.getStudent().getRollNo().equalsIgnoreCase(rollNo)) {
             throw new SecurityException("Access denied. You do not own this task.");
+        }
+
+        if (request.getDueDate() != null && request.getDueDate().isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Deadline cannot be in the past.");
         }
 
         task.setTitle(request.getTitle().trim());

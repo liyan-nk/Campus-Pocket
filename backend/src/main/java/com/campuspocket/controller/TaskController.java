@@ -29,9 +29,13 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@Valid @RequestBody TaskRequest request, Authentication authentication) {
+    public ResponseEntity<?> createTask(@Valid @RequestBody TaskRequest request, Authentication authentication) {
         String rollNo = authentication.getName();
-        return ResponseEntity.ok(taskService.createTask(rollNo, request));
+        try {
+            return ResponseEntity.ok(taskService.createTask(rollNo, request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")

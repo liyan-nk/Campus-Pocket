@@ -46,6 +46,14 @@ const Tasks = () => {
     fetchTasks();
   }, []);
 
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setError('');
@@ -53,6 +61,11 @@ const Tasks = () => {
 
     if (!title.trim()) {
       setError('Task title is required.');
+      return;
+    }
+
+    if (dueDate && dueDate < getTodayString()) {
+      setError('Deadline cannot be in the past.');
       return;
     }
 
@@ -139,6 +152,11 @@ const Tasks = () => {
 
     if (!editTitle.trim()) {
       setError('Task title is required.');
+      return;
+    }
+
+    if (editDueDate && editDueDate < getTodayString()) {
+      setError('Deadline cannot be in the past.');
       return;
     }
 
@@ -320,6 +338,7 @@ const Tasks = () => {
                 <input
                   type="date"
                   value={editDueDate}
+                  min={getTodayString()}
                   onChange={(e) => setEditDueDate(e.target.value)}
                   className="w-full pl-9 pr-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary font-medium"
                   disabled={updating}
@@ -377,6 +396,7 @@ const Tasks = () => {
                 <input
                   type="date"
                   value={dueDate}
+                  min={getTodayString()}
                   onChange={(e) => setDueDate(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary font-medium"
                   disabled={submitting}
