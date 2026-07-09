@@ -34,8 +34,12 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
         Student student = studentRepository.findByRollNo(rollNo)
             .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
+        String normDept = normalizeDepartment(student.getDepartment());
+        String normSem = normalizeSemester(student.getSemester());
+        String normBatch = normalizeBatch(student.getBatch());
+
         List<Timetable> entries = timetableRepository.findByDepartmentAndSemesterAndBatch(
-            student.getDepartment(), student.getSemester(), student.getBatch()
+            normDept, normSem, normBatch
         );
 
         // Sort by Day order (Monday -> Sunday) and then by Start Time
@@ -64,10 +68,18 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
         Timetable slot = timetableRepository.findById(request.getTimetableId())
             .orElseThrow(() -> new IllegalArgumentException("Timetable slot not found."));
 
-        // Validate that this class slot matches the student's academic profile
-        if (!slot.getDepartment().equalsIgnoreCase(student.getDepartment()) ||
-            !slot.getSemester().equalsIgnoreCase(student.getSemester()) ||
-            !slot.getBatch().equalsIgnoreCase(student.getBatch())) {
+        // Validate that this class slot matches the student's academic profile (Normalized comparison)
+        String normStudentDept = normalizeDepartment(student.getDepartment());
+        String normStudentSem = normalizeSemester(student.getSemester());
+        String normStudentBatch = normalizeBatch(student.getBatch());
+
+        String normSlotDept = normalizeDepartment(slot.getDepartment());
+        String normSlotSem = normalizeSemester(slot.getSemester());
+        String normSlotBatch = normalizeBatch(slot.getBatch());
+
+        if (!normSlotDept.equalsIgnoreCase(normStudentDept) ||
+            !normSlotSem.equalsIgnoreCase(normStudentSem) ||
+            !normSlotBatch.equalsIgnoreCase(normStudentBatch)) {
             throw new IllegalArgumentException("Unauthorized. This class slot is not in your academic timetable.");
         }
 
@@ -146,9 +158,13 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
         LocalDate todayDate = LocalDate.now();
         String todayDayString = getCapitalizedDay(todayDate);
 
-        // Fetch student's timetable entries for today
+        // Fetch student's timetable entries for today (Normalized comparison)
+        String normDept = normalizeDepartment(student.getDepartment());
+        String normSem = normalizeSemester(student.getSemester());
+        String normBatch = normalizeBatch(student.getBatch());
+
         List<Timetable> allTimetables = timetableRepository.findByDepartmentAndSemesterAndBatch(
-            student.getDepartment(), student.getSemester(), student.getBatch()
+            normDept, normSem, normBatch
         );
 
         List<Timetable> todayTimetables = allTimetables.stream()
@@ -166,7 +182,7 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
             .map(t -> {
                 String status = attendanceMap.getOrDefault(t.getId(), "UNMARKED");
                 return new TodayClassStatus(t, status);
-            })
+              })
             .collect(Collectors.toList());
 
         // Calculate next class
@@ -192,6 +208,29 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
     }
 
     // HELPERS
+
+    private String normalizeDepartment(String dept) {
+        if (dept == null) return "";
+        return dept.trim().toUpperCase();
+    }
+
+    private String normalizeSemester(String sem) {
+        if (sem == null) return "";
+        String s = sem.replaceAll("(?i)semester", "").replaceAll("\\s+", "").toUpperCase();
+        if (s.matches("^S+\\d+$")) {
+            return "S" + s.replaceAll("^S+", "");
+        }
+        return s;
+    }
+
+    private String normalizeBatch(String batch) {
+        if (batch == null) return "";
+        String b = batch.replaceAll("(?i)batch", "").replaceAll("\\s+", "").toUpperCase();
+        if (b.length() > 1 && b.startsWith("B")) {
+            return b.substring(1);
+        }
+        return b;
+    }
 
     private int getDayWeight(String day) {
         switch (day.toLowerCase()) {

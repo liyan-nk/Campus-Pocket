@@ -34,6 +34,35 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // 0. Database Migration/Update of existing legacy rows (SS3 -> S3, BA -> A, cse -> CSE)
+        List<Student> students = studentRepository.findAll();
+        for (Student s : students) {
+            String normDept = normalizeDepartment(s.getDepartment());
+            String normSem = normalizeSemester(s.getSemester());
+            String normBatch = normalizeBatch(s.getBatch());
+            if (!normDept.equals(s.getDepartment()) || !normSem.equals(s.getSemester()) || !normBatch.equals(s.getBatch())) {
+                s.setDepartment(normDept);
+                s.setSemester(normSem);
+                s.setBatch(normBatch);
+                studentRepository.save(s);
+                System.out.println(">>> MIGRATION: Normalized student record: " + s.getRollNo());
+            }
+        }
+
+        List<Timetable> timetables = timetableRepository.findAll();
+        for (Timetable t : timetables) {
+            String normDept = normalizeDepartment(t.getDepartment());
+            String normSem = normalizeSemester(t.getSemester());
+            String normBatch = normalizeBatch(t.getBatch());
+            if (!normDept.equals(t.getDepartment()) || !normSem.equals(t.getSemester()) || !normBatch.equals(t.getBatch())) {
+                t.setDepartment(normDept);
+                t.setSemester(normSem);
+                t.setBatch(normBatch);
+                timetableRepository.save(t);
+                System.out.println(">>> MIGRATION: Normalized timetable slot ID: " + t.getId());
+            }
+        }
+
         // 1. Seed Default Admin if none exists
         if (adminRepository.count() == 0) {
             String adminUsername = "admin";
@@ -178,5 +207,30 @@ public class DataInitializer implements CommandLineRunner {
             timetableRepository.saveAll(kmctTimetable);
             System.out.println(">>> SEED: Real S3 CSE & S3 AI&DS KMCT Timetables successfully seeded.");
         }
+    }
+
+    // NORMALIZATION HELPERS
+
+    private String normalizeDepartment(String dept) {
+        if (dept == null) return "";
+        return dept.trim().toUpperCase();
+    }
+
+    private String normalizeSemester(String sem) {
+        if (sem == null) return "";
+        String s = sem.replaceAll("(?i)semester", "").replaceAll("\\s+", "").toUpperCase();
+        if (s.matches("^S+\\d+$")) {
+            return "S" + s.replaceAll("^S+", "");
+        }
+        return s;
+    }
+
+    private String normalizeBatch(String batch) {
+        if (batch == null) return "";
+        String b = batch.replaceAll("(?i)batch", "").replaceAll("\\s+", "").toUpperCase();
+        if (b.length() > 1 && b.startsWith("B")) {
+            return b.substring(1);
+        }
+        return b;
     }
 }

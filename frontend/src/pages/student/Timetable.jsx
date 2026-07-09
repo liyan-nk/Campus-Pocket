@@ -50,9 +50,30 @@ const Timetable = () => {
   );
 
   // Format academic profile fields
-  const getFormattedDept = (val) => (val || '').toUpperCase();
-  const getFormattedSem = (val) => (val || '').replace(/semester/gi, '').trim().toUpperCase();
-  const getFormattedBatch = (val) => (val || '').replace(/batch/gi, '').trim().toUpperCase();
+  const getFormattedDept = (val) => {
+    if (!val) return '';
+    let d = val.trim().toUpperCase();
+    if (d === 'AI&DS' || d === 'AIDS' || d === 'AI AND DS' || d === 'AI & DS') return 'AI & DS';
+    return d;
+  };
+  const getFormattedSem = (val) => {
+    if (!val) return '';
+    let s = val.replace(/semester/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (/^S+\d+$/.test(s)) {
+      return 'S' + s.replace(/^S+/, '');
+    } else if (/^\d+$/.test(s)) {
+      return 'S' + s;
+    }
+    return s;
+  };
+  const getFormattedBatch = (val) => {
+    if (!val) return '';
+    let b = val.replace(/batch/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (b.length > 1 && b.startsWith('B')) {
+      return b.substring(1);
+    }
+    return b;
+  };
 
   // Bulletproof Subject and Faculty Parsers
   const getSubjectName = (slot) => {
@@ -101,7 +122,7 @@ const Timetable = () => {
       <div className="bg-cp-surface border border-cp-border p-2.5 px-3.5 rounded-2xl flex items-center justify-between text-xs text-cp-text-secondary font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
         <span>Academic Profile</span>
         <span className="font-mono text-cp-text-primary bg-cp-accent-light px-2 py-0.5 rounded-lg border border-cp-border-light text-[10px]">
-          {getFormattedDept(user?.department)} {getFormattedSem(user?.semester)} {getFormattedBatch(user?.batch)}
+          {getFormattedDept(user?.department)} / {getFormattedSem(user?.semester)} / {getFormattedBatch(user?.batch)}
         </span>
       </div>
 

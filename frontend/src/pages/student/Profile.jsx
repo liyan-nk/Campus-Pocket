@@ -162,17 +162,31 @@ const Profile = () => {
   // Sanitization helpers
   const cleanSemester = (sem) => {
     if (!sem) return '';
-    return sem.replace(/semester/gi, '').trim().toUpperCase();
+    let s = sem.replace(/semester/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (/^S+\d+$/.test(s)) {
+      return 'S' + s.replace(/^S+/, '');
+    } else if (/^\d+$/.test(s)) {
+      return 'S' + s;
+    }
+    return s;
   };
 
   const cleanBatch = (bat) => {
     if (!bat) return '';
-    return bat.replace(/batch/gi, '').trim().toUpperCase();
+    let b = bat.replace(/batch/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (b.length > 1 && b.startsWith('B')) {
+      return b.substring(1);
+    }
+    return b;
   };
 
   const cleanDept = (dept) => {
     if (!dept) return '';
-    return dept.toUpperCase();
+    let d = dept.trim().toUpperCase();
+    if (d === 'AI&DS' || d === 'AIDS' || d === 'AI AND DS' || d === 'AI & DS') {
+      return 'AI & DS';
+    }
+    return d;
   };
 
   if (loading) {

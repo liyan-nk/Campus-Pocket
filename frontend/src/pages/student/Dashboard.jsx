@@ -88,17 +88,31 @@ const Dashboard = () => {
   // Sanitization helpers
   const cleanSemester = (sem) => {
     if (!sem) return '';
-    return sem.replace(/semester/gi, '').trim().toUpperCase();
+    let s = sem.replace(/semester/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (/^S+\d+$/.test(s)) {
+      return 'S' + s.replace(/^S+/, '');
+    } else if (/^\d+$/.test(s)) {
+      return 'S' + s;
+    }
+    return s;
   };
 
   const cleanBatch = (bat) => {
     if (!bat) return '';
-    return bat.replace(/batch/gi, '').trim().toUpperCase();
+    let b = bat.replace(/batch/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (b.length > 1 && b.startsWith('B')) {
+      return b.substring(1);
+    }
+    return b;
   };
 
   const cleanDept = (dept) => {
     if (!dept) return '';
-    return dept.toUpperCase();
+    let d = dept.trim().toUpperCase();
+    if (d === 'AI&DS' || d === 'AIDS' || d === 'AI AND DS' || d === 'AI & DS') {
+      return 'AI & DS';
+    }
+    return d;
   };
 
   // Timetable formatting helpers
@@ -246,7 +260,7 @@ const Dashboard = () => {
 
         {data?.todayClasses?.length === 0 ? (
           <div className="text-center py-8 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
-            No classes scheduled for today in {cleanDept(data?.department)} S{cleanSemester(data?.semester)} B{cleanBatch(data?.batch)}.
+            No classes scheduled for today in {cleanDept(data?.department)} / {cleanSemester(data?.semester)} / {cleanBatch(data?.batch)}.
           </div>
         ) : (
           <div className="space-y-2.5">

@@ -50,6 +50,60 @@ const AdminDashboard = () => {
   const [ttEnd, setTtEnd] = useState('10:00');
   const [ttRoom, setTtRoom] = useState('');
   const [submittingTimetable, setSubmittingTimetable] = useState(false);
+  const [activeTimetableClassTab, setActiveTimetableClassTab] = useState('CSE S3 A');
+
+  // NORMALIZATION & SANITIZATION HELPERS
+  const normalizeDepartment = (dept) => {
+    if (!dept) return '';
+    let d = dept.trim().toUpperCase();
+    if (d === 'AI&DS' || d === 'AIDS' || d === 'AI AND DS' || d === 'AI & DS') return 'AI&DS';
+    return d;
+  };
+
+  const normalizeSemester = (sem) => {
+    if (!sem) return '';
+    let s = sem.replace(/semester/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (/^S+\d+$/.test(s)) {
+      return 'S' + s.replace(/^S+/, '');
+    } else if (/^\d+$/.test(s)) {
+      return 'S' + s;
+    }
+    return s;
+  };
+
+  const normalizeBatch = (batch) => {
+    if (!batch) return '';
+    let b = batch.replace(/batch/gi, '').replaceAll(/\s+/g, '').toUpperCase();
+    if (b.length > 1 && b.startsWith('B')) {
+      return b.substring(1);
+    }
+    return b;
+  };
+
+  const matchesFilter = (slot, filter) => {
+    let dept = '';
+    let sem = 'S3';
+    let batch = 'A';
+    if (filter === 'CSE S3 A') {
+      dept = 'CSE';
+    } else if (filter === 'AI & DS S3 A') {
+      dept = 'AI&DS';
+    }
+    const slotDept = normalizeDepartment(slot.department);
+    const slotSem = normalizeSemester(slot.semester);
+    const slotBatch = normalizeBatch(slot.batch);
+    return slotDept === dept && slotSem === sem && slotBatch === batch;
+  };
+
+  const formatStudentClass = (dept, sem, batch) => {
+    let cleanDept = (dept || '').trim().toUpperCase();
+    if (cleanDept === 'AI&DS' || cleanDept === 'AIDS' || cleanDept === 'AI AND DS' || cleanDept === 'AI & DS') {
+      cleanDept = 'AI & DS';
+    }
+    let cleanSem = normalizeSemester(sem);
+    let cleanBatch = normalizeBatch(batch);
+    return `${cleanDept} / ${cleanSem} / ${cleanBatch}`;
+  };
 
   // FETCH STUDENTS
   const fetchStudents = async (query = '') => {
@@ -348,6 +402,14 @@ const AdminDashboard = () => {
     alert('Copied to clipboard!');
   };
 
+  const activeClassSlots = timetable.filter(slot => matchesFilter(slot, activeTimetableClassTab));
+
+  const getSlotsForDay = (dayName) => {
+    return activeClassSlots
+      .filter(slot => slot.day.toLowerCase() === dayName.toLowerCase())
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
       
@@ -478,7 +540,7 @@ const AdminDashboard = () => {
                             <td className="py-3.5 px-4 font-mono font-bold text-gray-200">{student.rollNo}</td>
                             <td className="py-3.5 px-4 font-medium">{student.name}</td>
                             <td className="py-3.5 px-4 font-mono text-xs text-gray-400">
-                              {student.department} / S{student.semester} / B{student.batch}
+                              {formatStudentClass(student.department, student.semester, student.batch)}
                             </td>
                             <td className="py-3.5 px-4">
                               <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -635,63 +697,97 @@ const AdminDashboard = () => {
             {/* List entries (Col span 2) */}
             <div className="lg:col-span-2 space-y-4">
               <div className="bg-gray-800 rounded-3xl border border-gray-700/50 p-6 space-y-4">
-                <h3 className="font-display font-bold text-lg text-gray-100">Timetable Slots</h3>
+                <div className="flex items-center justify-between pb-2 flex-wrap gap-2">
+                  <h3 className="font-display font-bold text-lg text-gray-100">Timetable Slots</h3>
+                  <div className="flex space-x-1.5 bg-gray-900/60 p-1 rounded-xl border border-gray-700/60">
+                    {['CSE S3 A', 'AI & DS S3 A'].map((tab) => {
+                      const isActive = activeTimetableClassTab === tab;
+                      return (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveTimetableClassTab(tab)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            isActive
+                              ? 'bg-cp-accent text-cp-text-on-accent'
+                              : 'text-gray-400 hover:text-gray-200'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 
                 <div className="overflow-x-auto">
                   {loadingTimetable ? (
                     <div className="py-12 flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cp-accent"></div>
                     </div>
-                  ) : timetable.length === 0 ? (
+                  ) : activeClassSlots.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 text-sm">
-                      No timetable slots configured yet. Create one on the right.
+                      No timetable slots configured for {activeTimetableClassTab} yet.
                     </div>
                   ) : (
-                    <table className="w-full text-left text-sm border-collapse">
-                      <thead>
-                        <tr className="border-b border-gray-700 text-gray-400 font-bold text-xs uppercase tracking-wider">
-                          <th className="py-3 px-4">Subject & Faculty</th>
-                          <th className="py-3 px-4">Dept / Sem / Batch</th>
-                          <th className="py-3 px-4">Day & Time</th>
-                          <th className="py-3 px-4">Room</th>
-                          <th className="py-3 px-4 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {timetable.map((slot) => (
-                          <tr key={slot.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-all">
-                            <td className="py-3 px-4">
-                              <p className="font-bold text-gray-200">{slot.subject}</p>
-                              <p className="text-xs text-gray-400">{slot.faculty}</p>
-                            </td>
-                            <td className="py-3 px-4 font-mono text-xs">
-                              {slot.department} / S{slot.semester} / B{slot.batch}
-                            </td>
-                            <td className="py-3 px-4">
-                              <p className="text-sm font-semibold">{slot.day}</p>
-                              <p className="text-xs font-mono text-gray-400">
-                                {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
-                              </p>
-                            </td>
-                            <td className="py-3 px-4 font-semibold text-cp-accent">{slot.room}</td>
-                            <td className="py-3 px-4 text-right space-x-2">
-                              <button
-                                onClick={() => startEditTimetable(slot)}
-                                className="p-1.5 bg-gray-900 hover:bg-gray-700 text-cp-accent border border-gray-700 hover:border-gray-600 rounded-lg transition-all"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteTimetable(slot.id)}
-                                className="p-1.5 bg-gray-900 hover:bg-red-950/30 text-red-400 border border-gray-700 hover:border-red-900/30 rounded-lg transition-all"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1 scrollbar-none">
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                        const slots = getSlotsForDay(day);
+                        if (slots.length === 0) return null;
+                        return (
+                          <div key={day} className="space-y-3">
+                            <div className="flex items-center space-x-3">
+                              <h4 className="font-display font-bold text-xs text-cp-accent uppercase tracking-wider">{day}</h4>
+                              <div className="h-[1px] bg-gray-700/50 flex-grow"></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {slots.map(slot => (
+                                <div key={slot.id} className="bg-gray-950/60 border border-gray-800 hover:border-cp-accent/35 rounded-2xl p-4 transition-all space-y-3 relative group shadow-sm">
+                                  <div className="flex justify-between items-start">
+                                    <div className="space-y-0.5 min-w-0 pr-2">
+                                      <p className="text-[10px] font-mono font-bold text-cp-accent tracking-wider">
+                                        {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
+                                      </p>
+                                      <h5 className="font-display font-extrabold text-sm text-gray-100 mt-1 truncate">
+                                        {slot.subjectName || slot.subject}
+                                      </h5>
+                                      <p className="text-xs text-gray-400 font-semibold truncate">
+                                        {slot.facultyName || slot.faculty}
+                                      </p>
+                                    </div>
+                                    <div className="px-2 py-0.5 bg-gray-900 text-gray-300 font-mono text-[9px] font-bold rounded border border-gray-700 shrink-0 uppercase">
+                                      {slot.room}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between pt-2.5 border-t border-gray-800/80 text-[10px] text-gray-400">
+                                    <span className="font-mono text-gray-500">
+                                      {formatStudentClass(slot.department, slot.semester, slot.batch)}
+                                    </span>
+                                    <div className="flex items-center space-x-1.5">
+                                      <button
+                                        onClick={() => startEditTimetable(slot)}
+                                        className="p-1.5 bg-gray-900 hover:bg-gray-800 text-cp-accent border border-gray-800 hover:border-gray-700 rounded-lg transition-all"
+                                        title="Edit slot"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteTimetable(slot.id)}
+                                        className="p-1.5 bg-gray-900 hover:bg-red-950/20 text-red-400 border border-gray-800 hover:border-red-900/30 rounded-lg transition-all"
+                                        title="Delete slot"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>
