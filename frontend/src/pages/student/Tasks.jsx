@@ -198,8 +198,8 @@ const Tasks = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
       </div>
     );
   }
@@ -209,20 +209,20 @@ const Tasks = () => {
       
       {/* Header */}
       <div>
-        <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Academic Tracker</p>
-        <h2 className="text-2xl font-display font-extrabold text-gray-900 tracking-tight">Personal Tasks</h2>
+        <p className="text-cp-text-secondary text-xs font-bold uppercase tracking-wider">Academic Tracker</p>
+        <h2 className="text-2xl font-display font-extrabold text-cp-text-primary tracking-tight">Personal Tasks</h2>
       </div>
 
       {/* Logger Alerts */}
       {error && (
-        <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex items-start space-x-3 text-sm text-red-800">
-          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+        <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-3 text-sm text-red-500">
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
       {success && (
-        <div className="p-4 bg-green-50 rounded-2xl border border-green-100 flex items-start space-x-3 text-sm text-green-800">
-          <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+        <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-3 text-sm text-green-500">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{success}</span>
         </div>
       )}
@@ -230,8 +230,8 @@ const Tasks = () => {
       {/* CREATE / EDIT TASK ACCORDION */}
       {editingTask ? (
         /* EDIT TASK FORM */
-        <form onSubmit={handleUpdateTask} className="p-5 bg-gray-50 border border-purple-100 rounded-3xl space-y-4 animate-fadeIn">
-          <div className="flex items-center justify-between text-purple-600">
+        <form onSubmit={handleUpdateTask} className="p-5 bg-cp-surface border border-cp-border rounded-3xl space-y-4 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <div className="flex items-center justify-between text-cp-accent">
             <span className="text-sm font-bold flex items-center">
               <Edit2 className="w-4 h-4 mr-2" />
               Edit Task Details
@@ -239,7 +239,7 @@ const Tasks = () => {
             <button 
               type="button" 
               onClick={() => setEditingTask(null)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-cp-text-secondary hover:text-cp-text-primary"
             >
               <X className="w-4 h-4" />
             </button>
@@ -251,23 +251,23 @@ const Tasks = () => {
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="Task Title (e.g. Finish Record)"
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
               disabled={updating}
             />
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               placeholder="Task Description (optional)"
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 h-20 resize-none"
+              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent h-20 resize-none text-cp-text-primary placeholder-cp-text-secondary"
               disabled={updating}
             />
             <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Calendar className="absolute left-3 top-3 w-4 h-4 text-cp-text-secondary pointer-events-none" />
               <input
                 type="date"
                 value={editDueDate}
                 onChange={(e) => setEditDueDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 text-gray-700"
+                className="w-full pl-10 pr-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary"
                 disabled={updating}
               />
             </div>
@@ -277,14 +277,14 @@ const Tasks = () => {
             <button
               type="submit"
               disabled={updating}
-              className="w-1/2 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl transition-all"
+              className="w-1/2 py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold text-xs rounded-xl transition-all"
             >
               {updating ? 'Saving...' : 'Update Task'}
             </button>
             <button
               type="button"
               onClick={() => setEditingTask(null)}
-              className="w-1/2 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-xs rounded-xl transition-all"
+              className="w-1/2 py-3 bg-cp-bg hover:bg-cp-accent-light text-cp-text-primary font-semibold text-xs rounded-xl transition-all border border-cp-border"
             >
               Cancel
             </button>
@@ -292,9 +292,9 @@ const Tasks = () => {
         </form>
       ) : (
         /* CREATE TASK FORM */
-        <form onSubmit={handleCreateTask} className="p-4 bg-gray-50 border border-gray-200 rounded-3xl space-y-4">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center">
-            <Plus className="w-4 h-4 mr-1 text-purple-600" />
+        <form onSubmit={handleCreateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider flex items-center">
+            <Plus className="w-4 h-4 mr-1 text-cp-accent" />
             Add New Task
           </h3>
           
@@ -304,7 +304,7 @@ const Tasks = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs to be done?"
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
               disabled={submitting}
             />
             <input
@@ -312,16 +312,16 @@ const Tasks = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description (optional)"
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
               disabled={submitting}
             />
             <div className="relative">
-              <Calendar className="absolute left-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Calendar className="absolute left-3 top-3.5 w-4 h-4 text-cp-text-secondary pointer-events-none" />
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 text-gray-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary"
                 disabled={submitting}
               />
             </div>
@@ -330,10 +330,10 @@ const Tasks = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center space-x-1"
+            className="w-full py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-sm transition-all flex items-center justify-center space-x-1"
           >
             {submitting ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
                 <Plus className="w-4 h-4" />
@@ -346,34 +346,34 @@ const Tasks = () => {
 
       {/* PENDING TASKS SECTION */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+        <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider">
           Pending Tasks ({pendingTasks.length})
         </h3>
         
         {pendingTasks.length === 0 ? (
-          <div className="text-center py-10 bg-gray-50 border border-gray-150 border-dashed rounded-3xl text-sm text-gray-400 space-y-1">
+          <div className="text-center py-10 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-sm text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
             <CheckCircle2 className="w-6 h-6 mx-auto text-green-500" />
-            <p className="font-semibold text-gray-600">All caught up!</p>
-            <p className="text-xs text-gray-400">No pending academic tasks left.</p>
+            <p className="font-semibold text-cp-text-primary">All caught up!</p>
+            <p className="text-xs text-cp-text-secondary">No pending academic tasks left.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {pendingTasks.map(task => (
-              <div key={task.id} className="bg-white border border-gray-150 rounded-2xl p-4 flex items-start justify-between shadow-sm/5 hover:border-purple-200 transition-all duration-300">
+              <div key={task.id} className="bg-cp-surface border border-cp-border rounded-2xl p-4 flex items-start justify-between shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300">
                 {/* Left check circle & details */}
                 <div className="flex items-start space-x-3 flex-grow pr-3">
                   <button 
                     onClick={() => handleToggleComplete(task)}
-                    className="mt-1 text-gray-300 hover:text-purple-600 transition-all shrink-0"
+                    className="mt-1 text-cp-text-secondary/60 hover:text-cp-accent transition-all shrink-0"
                   >
                     <Square className="w-5 h-5" />
                   </button>
                   <div className="space-y-1 truncate max-w-[240px]">
-                    <h4 className="text-sm font-bold text-gray-800 leading-tight truncate">{task.title}</h4>
+                    <h4 className="text-sm font-bold text-cp-text-primary leading-tight truncate">{task.title}</h4>
                     {task.description && (
-                      <p className="text-xs text-gray-500 leading-relaxed truncate">{task.description}</p>
+                      <p className="text-xs text-cp-text-secondary leading-relaxed truncate">{task.description}</p>
                     )}
-                    <span className="inline-flex items-center text-[10px] text-gray-400 font-mono font-medium">
+                    <span className="inline-flex items-center text-[10px] text-cp-text-secondary font-mono font-medium">
                       <Calendar className="w-3.5 h-3.5 mr-1" />
                       {formatDate(task.dueDate)}
                     </span>
@@ -384,13 +384,13 @@ const Tasks = () => {
                 <div className="flex items-center space-x-1 shrink-0">
                   <button
                     onClick={() => handleStartEdit(task)}
-                    className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all"
+                    className="p-2 text-cp-text-secondary hover:text-cp-accent hover:bg-cp-accent-light rounded-xl transition-all"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteTask(task.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-2 text-cp-text-secondary hover:text-red-650 hover:bg-red-500/10 rounded-xl transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -404,32 +404,32 @@ const Tasks = () => {
       {/* COMPLETED TASKS SECTION */}
       {completedTasks.length > 0 && (
         <div className="space-y-3 pt-2">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider">
             Completed Tasks ({completedTasks.length})
           </h3>
           <div className="space-y-3">
             {completedTasks.map(task => (
-              <div key={task.id} className="bg-gray-50/50 border border-gray-150 rounded-2xl p-4 flex items-start justify-between opacity-60">
+              <div key={task.id} className="bg-cp-surface/60 border border-cp-border rounded-2xl p-4 flex items-start justify-between opacity-60">
                 <div className="flex items-start space-x-3 flex-grow pr-3">
                   <button 
                     onClick={() => handleToggleComplete(task)}
-                    className="mt-1 text-purple-600 transition-all shrink-0"
+                    className="mt-1 text-cp-accent transition-all shrink-0"
                   >
                     <CheckSquare className="w-5 h-5" />
                   </button>
                   <div className="space-y-1 truncate max-w-[240px]">
-                    <h4 className="text-sm font-semibold text-gray-500 line-through leading-tight truncate">
+                    <h4 className="text-sm font-semibold text-cp-text-secondary line-through leading-tight truncate">
                       {task.title}
                     </h4>
                     {task.description && (
-                      <p className="text-xs text-gray-400 line-through leading-relaxed truncate">{task.description}</p>
+                      <p className="text-xs text-cp-text-secondary/70 line-through leading-relaxed truncate">{task.description}</p>
                     )}
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleDeleteTask(task.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all shrink-0"
+                  className="p-2 text-cp-text-secondary hover:text-red-650 hover:bg-red-500/10 rounded-xl transition-all shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

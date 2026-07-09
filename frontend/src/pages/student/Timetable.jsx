@@ -49,10 +49,15 @@ const Timetable = () => {
     (slot) => slot.day.toLowerCase() === activeDay.toLowerCase()
   );
 
+  // Format academic profile fields
+  const getFormattedDept = (val) => (val || '').toUpperCase();
+  const getFormattedSem = (val) => (val || '').toUpperCase();
+  const getFormattedBatch = (val) => (val || '').toUpperCase();
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
       </div>
     );
   }
@@ -62,22 +67,22 @@ const Timetable = () => {
       
       {/* Header Title */}
       <div>
-        <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Class Schedule</p>
-        <h2 className="text-2xl font-display font-extrabold text-gray-900 tracking-tight">Timetable</h2>
+        <p className="text-cp-text-secondary text-xs font-bold uppercase tracking-wider">Class Schedule</p>
+        <h2 className="text-2xl font-display font-extrabold text-cp-text-primary tracking-tight">Timetable</h2>
       </div>
 
       {/* Profile summary banner */}
-      <div className="bg-gray-50 border border-gray-150 p-3 px-4 rounded-2xl flex items-center justify-between text-xs text-gray-500 font-semibold">
+      <div className="bg-cp-surface border border-cp-border p-3 px-4 rounded-2xl flex items-center justify-between text-xs text-cp-text-secondary font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
         <span>Academic Profile</span>
-        <span className="font-mono text-purple-600 bg-purple-50 px-2 py-0.5 rounded-lg">
-          {user?.department} S{user?.semester} B{user?.batch}
+        <span className="font-mono text-cp-text-primary bg-cp-accent-light px-2 py-0.5 rounded-lg border border-cp-border-light">
+          {getFormattedDept(user?.department)} {getFormattedSem(user?.semester)} {getFormattedBatch(user?.batch)}
         </span>
       </div>
 
       {/* Error alert logger */}
       {error && (
-        <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex items-start space-x-3 text-sm text-red-800">
-          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+        <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-3 text-sm text-red-500">
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -93,12 +98,12 @@ const Timetable = () => {
               onClick={() => setActiveDay(day)}
               className={`px-4 py-2.5 rounded-xl font-display text-xs font-bold shrink-0 transition-all ${
                 isActive
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-white text-gray-500 border border-gray-200 hover:border-purple-300'
+                  ? 'bg-cp-accent text-cp-text-on-accent shadow-sm'
+                  : 'bg-cp-surface text-cp-text-secondary border border-cp-border hover:border-cp-accent/30 shadow-[0_1px_2px_rgba(0,0,0,0.01)]'
               }`}
             >
               {day.substring(0, 3)}
-              {isToday && <span className="ml-1 text-[8px] uppercase px-1 bg-white/20 rounded-md">Today</span>}
+              {isToday && <span className="ml-1 text-[8px] uppercase px-1 bg-cp-accent-light text-cp-text-primary rounded-md">Today</span>}
             </button>
           );
         })}
@@ -107,43 +112,43 @@ const Timetable = () => {
       {/* Class Slots Cards List */}
       <div className="space-y-4">
         {filteredSlots.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 border border-gray-150 border-dashed rounded-3xl text-sm text-gray-400 space-y-2">
-            <Calendar className="w-8 h-8 mx-auto text-gray-300" />
+          <div className="text-center py-16 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-sm text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <Calendar className="w-8 h-8 mx-auto text-cp-text-secondary/55" />
             <p>No classes scheduled for {activeDay}.</p>
           </div>
         ) : (
           filteredSlots.map((slot) => (
             <div 
               key={slot.id} 
-              className="bg-white border border-gray-150 hover:border-purple-200 rounded-3xl p-5 hover:shadow-sm transition-all duration-300 space-y-4"
+              className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-5 hover:shadow-sm transition-all duration-300 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
             >
               {/* Header section */}
               <div className="flex items-start justify-between">
                 <div className="space-y-0.5">
-                  <h4 className="font-display font-extrabold text-base text-gray-900 tracking-tight leading-tight">
+                  <h4 className="font-display font-extrabold text-base text-cp-text-primary tracking-tight leading-tight">
                     {slot.subject}
                   </h4>
-                  <p className="text-xs text-gray-400 font-medium flex items-center">
-                    <User className="w-3.5 h-3.5 mr-1" />
+                  <p className="text-xs text-cp-text-secondary font-medium flex items-center">
+                    <User className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60" />
                     {slot.faculty}
                   </p>
                 </div>
-                <div className="px-2.5 py-1 bg-purple-50 text-purple-600 font-display font-extrabold text-xs rounded-xl border border-purple-100">
+                <div className="px-2.5 py-1 bg-cp-accent-light text-cp-text-primary font-display font-extrabold text-xs rounded-xl border border-cp-border-light">
                   {slot.room}
                 </div>
               </div>
 
               {/* Time slots and class room details footer */}
-              <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-3">
+              <div className="flex items-center justify-between text-xs text-cp-text-secondary border-t border-cp-border-light pt-3">
                 <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1.5 text-gray-300" />
-                  <span className="font-mono font-medium">
+                  <Clock className="w-4 h-4 mr-1.5 text-cp-text-secondary/60" />
+                  <span className="font-mono font-medium text-cp-text-primary">
                     {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-1 text-gray-300" />
-                  <span className="font-semibold text-gray-500">{slot.room}</span>
+                  <MapPin className="w-4 h-4 mr-1 text-cp-text-secondary/60" />
+                  <span className="font-semibold text-cp-text-primary">{slot.room}</span>
                 </div>
               </div>
             </div>

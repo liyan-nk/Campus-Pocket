@@ -354,12 +354,12 @@ const AdminDashboard = () => {
       {/* Admin Top Header */}
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="bg-purple-600 p-2 rounded-xl text-white">
+          <div className="bg-cp-accent p-2 rounded-xl text-cp-text-on-accent border border-cp-border">
             <Users className="w-6 h-6" />
           </div>
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-gray-100">Campus Pocket</h1>
-            <p className="text-xs text-purple-400 font-semibold tracking-wider uppercase">Administrative Control Panel</p>
+            <p className="text-xs text-cp-accent font-semibold tracking-wider uppercase">Administrative Control Panel</p>
           </div>
         </div>
 
@@ -384,7 +384,7 @@ const AdminDashboard = () => {
           onClick={() => { setActiveTab('students'); setError(''); setSuccess(''); }}
           className={`py-4 px-6 font-display font-semibold text-sm border-b-2 transition-all flex items-center space-x-2 ${
             activeTab === 'students'
-              ? 'border-purple-500 text-purple-400'
+              ? 'border-cp-accent text-cp-accent'
               : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
@@ -395,7 +395,7 @@ const AdminDashboard = () => {
           onClick={() => { setActiveTab('timetable'); setError(''); setSuccess(''); }}
           className={`py-4 px-6 font-display font-semibold text-sm border-b-2 transition-all flex items-center space-x-2 ${
             activeTab === 'timetable'
-              ? 'border-purple-500 text-purple-400'
+              ? 'border-cp-accent text-cp-accent'
               : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
@@ -439,13 +439,13 @@ const AdminDashboard = () => {
                       type="text"
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
-                      placeholder="Search students by Roll Number or Name..."
-                      className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-2xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 text-sm"
+                      placeholder="Search students by name, roll number, department..."
+                      className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-2xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-sm"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 font-semibold rounded-2xl text-sm transition-all shadow-md"
+                    className="px-6 py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-2xl text-sm transition-all shadow-md"
                   >
                     Search
                   </button>
@@ -455,7 +455,7 @@ const AdminDashboard = () => {
                 <div className="overflow-x-auto">
                   {loadingStudents ? (
                     <div className="py-12 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cp-accent"></div>
                     </div>
                   ) : students.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 text-sm">
@@ -532,7 +532,7 @@ const AdminDashboard = () => {
 
             {/* Enroll Student Form */}
             <div className="bg-gray-800 rounded-3xl border border-gray-700/50 p-6 h-fit space-y-4">
-              <div className="flex items-center space-x-2 text-purple-400">
+              <div className="flex items-center space-x-2 text-cp-accent">
                 <UserPlus className="w-5 h-5" />
                 <h3 className="font-display font-bold text-lg text-gray-100">Enroll Student</h3>
               </div>
@@ -546,7 +546,7 @@ const AdminDashboard = () => {
                     value={rollNo}
                     onChange={(e) => setRollNo(e.target.value)}
                     placeholder="e.g. CS202601"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={addingStudent}
                   />
                 </div>
@@ -557,7 +557,7 @@ const AdminDashboard = () => {
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     placeholder="e.g. Alice Cooper"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={addingStudent}
                   />
                 </div>
@@ -568,7 +568,7 @@ const AdminDashboard = () => {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. 9876543210"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={addingStudent}
                   />
                 </div>
@@ -580,7 +580,7 @@ const AdminDashboard = () => {
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
                       placeholder="e.g. CSE"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={addingStudent}
                     />
                   </div>
@@ -591,7 +591,7 @@ const AdminDashboard = () => {
                       value={semester}
                       onChange={(e) => setSemester(e.target.value)}
                       placeholder="e.g. S3"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={addingStudent}
                     />
                   </div>
@@ -602,7 +602,7 @@ const AdminDashboard = () => {
                       value={batch}
                       onChange={(e) => setBatch(e.target.value)}
                       placeholder="e.g. A"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={addingStudent}
                     />
                   </div>
@@ -611,10 +611,10 @@ const AdminDashboard = () => {
                 <button
                   type="submit"
                   disabled={addingStudent}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
+                  className="w-full py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
                 >
                   {addingStudent ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4" />
@@ -640,7 +640,7 @@ const AdminDashboard = () => {
                 <div className="overflow-x-auto">
                   {loadingTimetable ? (
                     <div className="py-12 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cp-accent"></div>
                     </div>
                   ) : timetable.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 text-sm">
@@ -673,11 +673,11 @@ const AdminDashboard = () => {
                                 {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
                               </p>
                             </td>
-                            <td className="py-3 px-4 font-semibold text-purple-400">{slot.room}</td>
+                            <td className="py-3 px-4 font-semibold text-cp-accent">{slot.room}</td>
                             <td className="py-3 px-4 text-right space-x-2">
                               <button
                                 onClick={() => startEditTimetable(slot)}
-                                className="p-1.5 bg-gray-900 hover:bg-gray-700 text-purple-400 border border-gray-700 hover:border-gray-600 rounded-lg transition-all"
+                                className="p-1.5 bg-gray-900 hover:bg-gray-700 text-cp-accent border border-gray-700 hover:border-gray-600 rounded-lg transition-all"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -699,7 +699,7 @@ const AdminDashboard = () => {
 
             {/* Timetable Add/Edit Form */}
             <div className="bg-gray-800 rounded-3xl border border-gray-700/50 p-6 h-fit space-y-4">
-              <div className="flex items-center space-x-2 text-purple-400">
+              <div className="flex items-center space-x-2 text-cp-accent">
                 <Plus className="w-5 h-5" />
                 <h3 className="font-display font-bold text-lg text-gray-100">
                   {editingEntry ? 'Edit Entry' : 'Add Timetable Entry'}
@@ -715,7 +715,7 @@ const AdminDashboard = () => {
                       value={ttDept}
                       onChange={(e) => setTtDept(e.target.value)}
                       placeholder="e.g. CSE"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={submittingTimetable}
                     />
                   </div>
@@ -726,7 +726,7 @@ const AdminDashboard = () => {
                       value={ttSem}
                       onChange={(e) => setTtSem(e.target.value)}
                       placeholder="e.g. S3"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={submittingTimetable}
                     />
                   </div>
@@ -737,7 +737,7 @@ const AdminDashboard = () => {
                       value={ttBatch}
                       onChange={(e) => setTtBatch(e.target.value)}
                       placeholder="e.g. A"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-center uppercase"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent font-mono text-center uppercase"
                       disabled={submittingTimetable}
                     />
                   </div>
@@ -750,7 +750,7 @@ const AdminDashboard = () => {
                     value={ttSubject}
                     onChange={(e) => setTtSubject(e.target.value)}
                     placeholder="e.g. Data Structures"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={submittingTimetable}
                   />
                 </div>
@@ -762,7 +762,7 @@ const AdminDashboard = () => {
                     value={ttFaculty}
                     onChange={(e) => setTtFaculty(e.target.value)}
                     placeholder="e.g. Prof. Alan Smith"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={submittingTimetable}
                   />
                 </div>
@@ -772,7 +772,7 @@ const AdminDashboard = () => {
                   <select
                     value={ttDay}
                     onChange={(e) => setTtDay(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 text-gray-200"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent text-gray-200"
                     disabled={submittingTimetable}
                   >
                     <option value="Monday">Monday</option>
@@ -787,35 +787,35 @@ const AdminDashboard = () => {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Start Time</label>
+                    <label className="block text-xs font-bold text-gray-550 uppercase tracking-wider mb-1">Start Time</label>
                     <input
                       type="time"
                       value={ttStart}
                       onChange={(e) => setTtStart(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 text-center font-mono text-gray-200"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent text-center font-mono text-gray-200"
                       disabled={submittingTimetable}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">End Time</label>
+                    <label className="block text-xs font-bold text-gray-550 uppercase tracking-wider mb-1">End Time</label>
                     <input
                       type="time"
                       value={ttEnd}
                       onChange={(e) => setTtEnd(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 text-center font-mono text-gray-200"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent text-center font-mono text-gray-200"
                       disabled={submittingTimetable}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Class Room</label>
+                  <label className="block text-xs font-bold text-gray-550 uppercase tracking-wider mb-1">Class Room</label>
                   <input
                     type="text"
                     value={ttRoom}
                     onChange={(e) => setTtRoom(e.target.value)}
                     placeholder="e.g. Room 302"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-cp-accent"
                     disabled={submittingTimetable}
                   />
                 </div>
@@ -824,7 +824,7 @@ const AdminDashboard = () => {
                   <button
                     type="submit"
                     disabled={submittingTimetable}
-                    className="flex-grow py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center"
+                    className="flex-grow py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-sm transition-all flex items-center justify-center"
                   >
                     {submittingTimetable ? 'Saving...' : editingEntry ? 'Update' : 'Add Slot'}
                   </button>
@@ -868,12 +868,12 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-400 leading-relaxed">{modalMessage}</p>
 
             {/* Code Highlight Box */}
-            <div className="flex items-center justify-between bg-gray-900 border border-gray-700 p-4 rounded-2xl font-mono text-lg font-bold text-purple-400">
+            <div className="flex items-center justify-between bg-gray-900 border border-gray-700 p-4 rounded-2xl font-mono text-lg font-bold text-cp-accent">
               <span>{modalCode}</span>
               <button 
                 onClick={copyToClipboard}
                 title="Copy to clipboard"
-                className="p-2 hover:bg-gray-800 text-gray-400 hover:text-purple-400 rounded-xl transition-all"
+                className="p-2 hover:bg-gray-800 text-gray-400 hover:text-cp-accent rounded-xl transition-all"
               >
                 <Clipboard className="w-5 h-5" />
               </button>

@@ -1,30 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+:root {
+  --bg-color: #fbfbfa; /* Warm off-white background */
+  --card-bg: #ffffff;  /* Soft white surface */
+  --card-border: #f4f4f5; /* Subtle border light */
+  --border-color: #e4e4e7; /* Zinc-200 */
+  --text-main: #09090b; /* Charcoal text */
+  --text-muted: #71717a; /* Muted text zinc-500 */
+  --accent: #09090b; /* Charcoal accent color */
+  --accent-hover: #27272a;
+  --accent-light: #f4f4f5;
+  --text-on-accent: #ffffff;
+}
+
+.dark {
+  --bg-color: #0a0a0c; /* Premium dark background */
+  --card-bg: #141416;  /* Elevated dark card surface */
+  --card-border: #1f1f23; /* Subtle dark border */
+  --border-color: #27272a; /* Zinc-800 border */
+  --text-main: #f4f4f5; /* Off-white text */
+  --text-muted: #a1a1aa; /* Zinc-400 text */
+  --accent: #fafafa; /* White accent in dark mode */
+  --accent-hover: #f4f4f5;
+  --accent-light: #1f1f23;
+  --text-on-accent: #09090b;
+}
+
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
   
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
+  --color-cp-bg: var(--bg-color);
+  --color-cp-surface: var(--card-bg);
+  --color-cp-border: var(--border-color);
+  --color-cp-border-light: var(--card-border);
+  --color-cp-text-primary: var(--text-main);
+  --color-cp-text-secondary: var(--text-muted);
+  --color-cp-accent: var(--accent);
+  --color-cp-accent-hover: var(--accent-hover);
+  --color-cp-accent-light: var(--accent-light);
+  --color-cp-text-on-accent: var(--text-on-accent);
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f9fafb;
-  color: #111827;
+  background-color: var(--bg-color);
+  color: var(--text-main);
   min-height: 100vh;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 /* Custom styles for mobile-first app feel */
@@ -34,9 +61,10 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: var(--bg-color);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
   position: relative;
+  transition: background-color 0.25s ease;
 }
 
 /* Custom scrollbars for a cleaner UI */
@@ -48,9 +76,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
+  background: var(--border-color);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: var(--text-muted);
 }

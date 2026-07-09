@@ -33,25 +33,25 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-700/50 p-8 space-y-6">
+    <div className="min-h-screen bg-cp-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-cp-surface rounded-3xl shadow-2xl overflow-hidden border border-cp-border p-8 space-y-6">
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center">
-            <Lock className="w-6 h-6 text-purple-400" />
+          <div className="mx-auto w-12 h-12 bg-cp-accent-light/10 border border-cp-border rounded-2xl flex items-center justify-center">
+            <Lock className="w-6 h-6 text-cp-accent" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-gray-100 tracking-tight">
+          <h1 className="font-display text-2xl font-bold text-cp-text-primary tracking-tight">
             Control Console
           </h1>
-          <p className="text-sm text-gray-400 font-medium">
+          <p className="text-sm text-cp-text-secondary font-medium">
             Authorized Personnel Only
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start space-x-3 text-sm text-red-400">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start space-x-3 text-sm text-red-500">
             <ShieldAlert className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -60,7 +60,7 @@ const AdminLogin = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
               Username
             </label>
             <input
@@ -68,13 +68,13 @@ const AdminLogin = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter administrator username"
-              className="w-full px-4 py-3.5 bg-gray-900/50 border border-gray-700 rounded-2xl text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all text-sm"
               disabled={submitting}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
               Password
             </label>
             <input
@@ -82,7 +82,7 @@ const AdminLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3.5 bg-gray-900/50 border border-gray-700 rounded-2xl text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+              className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
               disabled={submitting}
             />
           </div>
@@ -90,10 +90,10 @@ const AdminLogin = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full mt-6 py-4 bg-purple-600 hover:bg-purple-700 text-white font-display font-semibold rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
+            className="w-full mt-6 py-4 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-display font-semibold rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
           >
             {submitting ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <span>Access Console</span>
             )}
@@ -101,7 +101,7 @@ const AdminLogin = () => {
         </form>
 
         {/* Footer */}
-        <div className="text-center text-xs text-gray-600 font-medium pt-2">
+        <div className="text-center text-xs text-cp-text-secondary font-medium pt-2">
           Strict monitoring is active. Unauthorized access attempts will be logged.
         </div>
       </div>
