@@ -31,6 +31,9 @@ public class Task {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
+    @Column(name = "created_date", nullable = false, columnDefinition = "DATE DEFAULT CURRENT_DATE")
+    private LocalDate createdDate = LocalDate.now();
+
     @Column(nullable = false)
     private boolean completed;
 
@@ -43,6 +46,14 @@ public class Task {
         this.description = description;
         this.dueDate = dueDate;
         this.completed = completed;
+        this.createdDate = LocalDate.now();
+    }
+
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (this.createdDate == null) {
+            this.createdDate = LocalDate.now();
+        }
     }
 
     // Getters and Setters
@@ -84,6 +95,14 @@ public class Task {
 
     public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public LocalDate getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDate createdDate) {
+        this.createdDate = createdDate;
     }
 
     public boolean isCompleted() {

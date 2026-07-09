@@ -355,10 +355,12 @@ const Profile = () => {
           <button
             type="button"
             onClick={toggleTheme}
-            className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-cp-border transition-colors duration-200 ease-in-out focus:outline-none bg-cp-bg"
+            className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
+              theme === 'dark' ? 'bg-cp-accent' : 'bg-cp-accent-light'
+            }`}
           >
             <span
-              className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-cp-accent shadow-sm transition duration-200 ease-in-out ${
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-cp-surface shadow-md transition duration-200 ease-in-out ${
                 theme === 'dark' ? 'translate-x-4' : 'translate-x-0'
               }`}
             />

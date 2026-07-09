@@ -89,6 +89,16 @@ const Tasks = () => {
 
   const handleToggleComplete = async (task) => {
     setError('');
+    
+    // Back up the previous tasks state
+    const previousTasks = [...tasks];
+    
+    // Optimistic state update: toggle the target task completed status instantly
+    const updatedTasks = tasks.map(t => 
+      t.id === task.id ? { ...t, completed: !t.completed } : t
+    );
+    setTasks(updatedTasks);
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks/${task.id}`, {
         method: 'PUT',
@@ -106,9 +116,11 @@ const Tasks = () => {
         const data = await response.json();
         throw new Error(data.message || 'Failed to update task.');
       }
-
-      fetchTasks();
+      
+      // Keep optimistic state on success without reloading the whole list
     } catch (err) {
+      // Roll back to previous tasks state on failure
+      setTasks(previousTasks);
       setError(err.message);
     }
   };
@@ -185,15 +197,55 @@ const Tasks = () => {
   const pendingTasks = tasks.filter(t => !t.completed);
   const completedTasks = tasks.filter(t => t.completed);
 
-  // Format date helper: "Jul 7, 2026"
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No due date';
-    const date = new Date(dateString);
+  // Format date helper: "Jul 7" (Timezone safe)
+  const formatShortDate = (dateString) => {
+    if (!dateString) return '';
+    
+    // Check if it is a string representation or an object/Date
+    let date;
+    if (typeof dateString === 'string') {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        date = new Date(year, monthIndex, day);
+      } else {
+        date = new Date(dateString);
+      }
+    } else {
+      date = new Date(dateString);
+    }
+    
     return date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
+  };
+
+  // Overdue calculation helper (Timezone safe)
+  const isOverdue = (task) => {
+    if (!task.dueDate || task.completed) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let due;
+    if (typeof task.dueDate === 'string') {
+      const parts = task.dueDate.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        due = new Date(year, monthIndex, day);
+      } else {
+        due = new Date(task.dueDate);
+      }
+    } else {
+      due = new Date(task.dueDate);
+    }
+    
+    due.setHours(0, 0, 0, 0);
+    return due < today;
   };
 
   if (loading) {
@@ -372,10 +424,27 @@ const Tasks = () => {
                     {task.description && (
                       <p className="text-[11px] text-cp-text-secondary leading-normal truncate">{task.description}</p>
                     )}
-                    <span className="inline-flex items-center text-[9px] text-cp-text-secondary font-mono font-medium mt-0.5">
-                      <Calendar className="w-3 h-3 mr-1 text-cp-text-secondary/60" />
-                      {formatDate(task.dueDate)}
-                    </span>
+                    
+                    {/* Compact Date Info Boxes */}
+                    <div className="flex flex-wrap gap-1.5 mt-1 text-[9px] font-medium text-cp-text-secondary select-none">
+                      <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
+                        <span className="text-cp-text-secondary/60">Created</span>
+                        <span className="font-mono text-cp-text-primary">{formatShortDate(task.createdDate || new Date())}</span>
+                      </div>
+                      
+                      {task.dueDate && (
+                        <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
+                          <span className="text-cp-text-secondary/60">Due</span>
+                          <span className="font-mono text-cp-text-primary">{formatShortDate(task.dueDate)}</span>
+                        </div>
+                      )}
+
+                      {isOverdue(task) && (
+                        <span className="px-1.5 py-0.5 bg-red-500/5 text-red-500/70 border border-red-500/10 rounded text-[9px] uppercase font-bold tracking-wider animate-pulse">
+                          Overdue
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -423,6 +492,21 @@ const Tasks = () => {
                     {task.description && (
                       <p className="text-[11px] text-cp-text-secondary/70 line-through leading-normal truncate">{task.description}</p>
                     )}
+                    
+                    {/* Compact Date Info Boxes for completed tasks */}
+                    <div className="flex flex-wrap gap-1.5 mt-1 text-[9px] font-medium text-cp-text-secondary select-none">
+                      <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
+                        <span className="text-cp-text-secondary/60">Created</span>
+                        <span className="font-mono text-cp-text-primary">{formatShortDate(task.createdDate || new Date())}</span>
+                      </div>
+                      
+                      {task.dueDate && (
+                        <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
+                          <span className="text-cp-text-secondary/60">Due</span>
+                          <span className="font-mono text-cp-text-primary">{formatShortDate(task.dueDate)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
