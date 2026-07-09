@@ -313,15 +313,18 @@ const Tasks = () => {
               className="w-full px-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent h-16 resize-none text-cp-text-primary placeholder-cp-text-secondary"
               disabled={updating}
             />
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
-              <input
-                type="date"
-                value={editDueDate}
-                onChange={(e) => setEditDueDate(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary font-medium"
-                disabled={updating}
-              />
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider block px-1">Due Date / Deadline</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
+                <input
+                  type="date"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary font-medium"
+                  disabled={updating}
+                />
+              </div>
             </div>
           </div>
 
@@ -367,15 +370,18 @@ const Tasks = () => {
               className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary"
               disabled={submitting}
             />
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary font-medium"
-                disabled={submitting}
-              />
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider block px-1">Due Date / Deadline</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary font-medium"
+                  disabled={submitting}
+                />
+              </div>
             </div>
           </div>
 
