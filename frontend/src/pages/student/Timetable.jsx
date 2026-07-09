@@ -54,6 +54,32 @@ const Timetable = () => {
   const getFormattedSem = (val) => (val || '').replace(/semester/gi, '').trim().toUpperCase();
   const getFormattedBatch = (val) => (val || '').replace(/batch/gi, '').trim().toUpperCase();
 
+  // Bulletproof Subject and Faculty Parsers
+  const getSubjectName = (slot) => {
+    if (slot.subjectName) return slot.subjectName;
+    if (slot.subject && slot.subject.includes('(')) {
+      return slot.subject.split('(')[0].trim();
+    }
+    return slot.subject;
+  };
+
+  const getSubjectCode = (slot) => {
+    if (slot.subjectCode) return slot.subjectCode;
+    if (slot.subject && slot.subject.includes('(')) {
+      const match = slot.subject.match(/\(([^)]+)\)/);
+      return match ? match[1].trim() : '';
+    }
+    return '';
+  };
+
+  const getFacultyName = (slot) => {
+    if (slot.facultyName) return slot.facultyName;
+    if (slot.faculty && slot.faculty.includes('(')) {
+      return slot.faculty.split('(')[0].trim();
+    }
+    return slot.faculty;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cp-bg">
@@ -117,42 +143,44 @@ const Timetable = () => {
             <p>No classes scheduled for {activeDay}.</p>
           </div>
         ) : (
-          filteredSlots.map((slot) => (
-            <div 
-              key={slot.id} 
-              className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
-            >
-              {/* Header section */}
-              <div className="flex items-start justify-between">
-                <div className="space-y-0.5 min-w-0 pr-2">
-                  <h4 className="font-display font-extrabold text-sm text-cp-text-primary tracking-tight leading-tight truncate">
-                    {slot.subject}
-                  </h4>
-                  <p className="text-[11px] text-cp-text-secondary font-medium flex items-center truncate">
-                    <User className="w-3 h-3 mr-1 text-cp-text-secondary/60 shrink-0" />
-                    {slot.faculty}
-                  </p>
+          // Sort slots chronologically by start time
+          filteredSlots
+            .sort((a, b) => a.startTime.localeCompare(b.startTime))
+            .map((slot) => (
+              <div 
+                key={slot.id} 
+                className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+              >
+                {/* Header section */}
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1 min-w-0 pr-2 flex-grow">
+                    <h4 className="font-display font-extrabold text-sm text-cp-text-primary tracking-tight leading-tight">
+                      {getSubjectName(slot)}
+                    </h4>
+                    <p className="text-[10px] font-mono text-cp-text-secondary font-bold tracking-wider uppercase">
+                      {getSubjectCode(slot)}
+                    </p>
+                  </div>
+                  <div className="px-2 py-0.5 bg-cp-accent-light text-cp-text-primary font-display font-extrabold text-[10px] rounded-lg border border-cp-border-light shrink-0">
+                    {slot.room}
+                  </div>
                 </div>
-                <div className="px-2 py-0.5 bg-cp-accent-light text-cp-text-primary font-display font-extrabold text-[10px] rounded-lg border border-cp-border-light shrink-0">
-                  {slot.room}
-                </div>
-              </div>
 
-              {/* Time slots and class room details footer */}
-              <div className="flex items-center justify-between text-[11px] text-cp-text-secondary border-t border-cp-border-light pt-2.5">
-                <div className="flex items-center">
-                  <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
-                  <span className="font-mono font-medium text-cp-text-primary">
-                    {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60" />
-                  <span className="font-semibold text-cp-text-primary">{slot.room}</span>
+                {/* Time slots and class room details footer */}
+                <div className="flex items-center justify-between text-[11px] text-cp-text-secondary border-t border-cp-border-light pt-2.5">
+                  <div className="flex items-center">
+                    <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
+                    <span className="font-mono font-medium text-cp-text-primary">
+                      {slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <User className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60 shrink-0" />
+                    <span className="font-semibold text-cp-text-primary">{getFacultyName(slot)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))
         )}
       </div>
 

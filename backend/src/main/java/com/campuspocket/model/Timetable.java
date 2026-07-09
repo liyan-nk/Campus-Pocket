@@ -31,6 +31,21 @@ public class Timetable {
     @Column(nullable = false)
     private String faculty;
 
+    @Column(name = "period_number")
+    private Integer periodNumber;
+
+    @Column(name = "subject_code")
+    private String subjectCode;
+
+    @Column(name = "subject_name")
+    private String subjectName;
+
+    @Column(name = "faculty_code")
+    private String facultyCode;
+
+    @Column(name = "faculty_name")
+    private String facultyName;
+
     @Column(name = "class_day", nullable = false)
     private String day; // "Monday", "Tuesday", etc.
 
@@ -57,6 +72,26 @@ public class Timetable {
         this.startTime = startTime;
         this.endTime = endTime;
         this.room = room;
+    }
+
+    public Timetable(String department, String semester, String batch, String subjectCode, String subjectName, 
+                     String facultyCode, String facultyName, Integer periodNumber, String day, 
+                     LocalTime startTime, LocalTime endTime, String room) {
+        this.department = department;
+        this.semester = semester;
+        this.batch = batch;
+        this.subjectCode = subjectCode;
+        this.subjectName = subjectName;
+        this.facultyCode = facultyCode;
+        this.facultyName = facultyName;
+        this.periodNumber = periodNumber;
+        this.day = day;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.room = room;
+        // fallback legacy mapping
+        this.subject = subjectName + " (" + subjectCode + ")";
+        this.faculty = facultyName + " (" + facultyCode + ")";
     }
 
     // Getters and Setters
@@ -138,5 +173,45 @@ public class Timetable {
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+    public Integer getPeriodNumber() {
+        return periodNumber;
+    }
+
+    public void setPeriodNumber(Integer periodNumber) {
+        this.periodNumber = periodNumber;
+    }
+
+    public String getSubjectCode() {
+        return subjectCode;
+    }
+
+    public void setSubjectCode(String subjectCode) {
+        this.subjectCode = subjectCode;
+    }
+
+    public String getSubjectName() {
+        return subjectName;
+    }
+
+    public void setSubjectName(String subjectName) {
+        this.subjectName = subjectName;
+    }
+
+    public String getFacultyCode() {
+        return facultyCode;
+    }
+
+    public void setFacultyCode(String facultyCode) {
+        this.facultyCode = facultyCode;
+    }
+
+    public String getFacultyName() {
+        return facultyName;
+    }
+
+    public void setFacultyName(String facultyName) {
+        this.facultyName = facultyName;
     }
 }

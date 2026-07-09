@@ -101,6 +101,35 @@ const Dashboard = () => {
     return dept.toUpperCase();
   };
 
+  // Timetable formatting helpers
+  const getSubjectName = (t) => {
+    if (!t) return '';
+    if (t.subjectName) return t.subjectName;
+    if (t.subject && t.subject.includes('(')) {
+      return t.subject.split('(')[0].trim();
+    }
+    return t.subject;
+  };
+
+  const getSubjectCode = (t) => {
+    if (!t) return '';
+    if (t.subjectCode) return t.subjectCode;
+    if (t.subject && t.subject.includes('(')) {
+      const match = t.subject.match(/\(([^)]+)\)/);
+      return match ? match[1].trim() : '';
+    }
+    return '';
+  };
+
+  const getFacultyName = (t) => {
+    if (!t) return '';
+    if (t.facultyName) return t.facultyName;
+    if (t.faculty && t.faculty.includes('(')) {
+      return t.faculty.split('(')[0].trim();
+    }
+    return t.faculty;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cp-bg">
@@ -162,14 +191,16 @@ const Dashboard = () => {
         {data?.nextClass ? (
           <div className="bg-cp-accent text-cp-text-on-accent rounded-3xl p-4 shadow-md border border-cp-border/10 space-y-3">
             <div className="flex items-start justify-between">
-              <div className="space-y-0.5">
+              <div className="space-y-1 min-w-0 pr-2 flex-grow">
                 <span className="px-2 py-0.5 bg-cp-text-on-accent/10 backdrop-blur-md rounded-lg text-[9px] font-bold uppercase tracking-wider">
                   Upcoming
                 </span>
                 <h4 className="text-base font-display font-extrabold tracking-tight mt-1 leading-tight">
-                  {data.nextClass.timetable.subject}
+                  {getSubjectName(data.nextClass.timetable)}
                 </h4>
-                <p className="text-xs text-cp-text-on-accent/60 font-medium">{data.nextClass.timetable.faculty}</p>
+                <p className="text-[10px] font-mono text-cp-text-on-accent/60 font-bold tracking-wider uppercase">
+                  {getSubjectCode(data.nextClass.timetable)}
+                </p>
               </div>
               <div className="w-9 h-9 bg-cp-text-on-accent/10 backdrop-blur-md rounded-xl flex items-center justify-center font-display font-extrabold text-xs border border-cp-text-on-accent/15 shrink-0">
                 {data.nextClass.timetable.room}
@@ -184,10 +215,14 @@ const Dashboard = () => {
                 </span>
               </div>
               <div className="flex items-center">
-                <MapPin className="w-3.5 h-3.5 mr-1" />
-                <span>{data.nextClass.timetable.room}</span>
+                <User className="w-3.5 h-3.5 mr-1 text-cp-text-on-accent/60" />
+                <span>{getFacultyName(data.nextClass.timetable)}</span>
               </div>
             </div>
+          </div>
+        ) : data?.todayClasses && data.todayClasses.length > 0 ? (
+          <div className="bg-cp-surface border border-cp-border rounded-3xl p-4 text-center text-xs font-bold text-green-600 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            Classes completed for today 🎉
           </div>
         ) : (
           <div className="bg-cp-surface border border-cp-border rounded-3xl p-4 text-center text-xs text-cp-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
@@ -230,7 +265,7 @@ const Dashboard = () => {
                 >
                   {/* Left Metadata */}
                   <div className="space-y-0.5 max-w-[200px] truncate">
-                    <h4 className="text-xs font-bold text-cp-text-primary truncate">{cls.timetable.subject}</h4>
+                    <h4 className="text-xs font-bold text-cp-text-primary truncate">{getSubjectName(cls.timetable)}</h4>
                     <div className="flex items-center space-x-2 text-[10px] text-cp-text-secondary">
                       <span className="font-mono flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
