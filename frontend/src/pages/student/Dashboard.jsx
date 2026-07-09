@@ -13,7 +13,6 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [markingId, setMarkingId] = useState(null); // tracking active marking action
 
   const fetchDashboardData = async () => {
     try {
@@ -39,7 +38,24 @@ const Dashboard = () => {
 
   const handleMarkAttendance = async (timetableId, status) => {
     setError('');
-    setMarkingId(timetableId);
+    const previousData = { ...data };
+
+    // Optimistically update state
+    const updatedTodayClasses = (data?.todayClasses || []).map(cls => {
+      if (cls?.timetable?.id === timetableId) {
+        return {
+          ...cls,
+          attendanceStatus: status
+        };
+      }
+      return cls;
+    });
+
+    setData(prev => ({
+      ...prev,
+      todayClasses: updatedTodayClasses
+    }));
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/attendance/mark`, {
         method: 'POST',
@@ -52,17 +68,14 @@ const Dashboard = () => {
         })
       });
 
-      const result = await response.json();
       if (!response.ok) {
+        const result = await response.json();
         throw new Error(result.message || 'Failed to mark attendance.');
       }
-      
-      // Reload dashboard data to refresh statuses
-      await fetchDashboardData();
     } catch (err) {
       setError(err.message);
-    } finally {
-      setMarkingId(null);
+      // Rollback to previous state
+      setData(previousData);
     }
   };
 
@@ -297,7 +310,6 @@ const Dashboard = () => {
                     {/* PRESENT Toggle */}
                     <button
                       onClick={() => cls?.timetable?.id && handleMarkAttendance(cls.timetable.id, 'PRESENT')}
-                      disabled={markingId !== null}
                       className={`p-1.5 rounded-lg transition-all flex items-center justify-center border ${
                         markedPresent
                           ? 'bg-green-600 border-green-600 text-white shadow-sm'
@@ -310,7 +322,6 @@ const Dashboard = () => {
                     {/* ABSENT Toggle */}
                     <button
                       onClick={() => cls?.timetable?.id && handleMarkAttendance(cls.timetable.id, 'ABSENT')}
-                      disabled={markingId !== null}
                       className={`p-1.5 rounded-lg transition-all flex items-center justify-center border ${
                         markedAbsent
                           ? 'bg-red-600 border-red-600 text-white shadow-sm'
