@@ -114,6 +114,39 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const [avatarMode, setAvatarMode] = useState('initials');
+  const [avatarInitials, setAvatarInitials] = useState('');
+  const [avatarImage, setAvatarImage] = useState('');
+
+  // Sync avatar data from localStorage on user change
+  useEffect(() => {
+    if (user && user.role !== 'ADMIN') {
+      const mode = localStorage.getItem(`cp_avatar_${user.username}_mode`) || 'initials';
+      const initials = localStorage.getItem(`cp_avatar_${user.username}_initials`) || user.name?.charAt(0) || '';
+      const img = localStorage.getItem(`cp_avatar_${user.username}_image`) || '';
+      
+      setAvatarMode(mode);
+      setAvatarInitials(initials);
+      setAvatarImage(img);
+    } else {
+      setAvatarMode('initials');
+      setAvatarInitials('');
+      setAvatarImage('');
+    }
+  }, [user]);
+
+  // Future-proof avatar update logic (can be redirected to backend later)
+  const updateAvatar = async (mode, initials, imageBase64) => {
+    if (!user) return;
+    localStorage.setItem(`cp_avatar_${user.username}_mode`, mode);
+    localStorage.setItem(`cp_avatar_${user.username}_initials`, initials);
+    localStorage.setItem(`cp_avatar_${user.username}_image`, imageBase64);
+    
+    setAvatarMode(mode);
+    setAvatarInitials(initials);
+    setAvatarImage(imageBase64);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -125,6 +158,10 @@ export const AuthProvider = ({ children }) => {
         logout,
         changePassword,
         checkAuthStatus,
+        avatarMode,
+        avatarInitials,
+        avatarImage,
+        updateAvatar,
       }}
     >
       {children}

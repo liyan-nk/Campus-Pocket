@@ -205,24 +205,24 @@ const Tasks = () => {
   }
 
   return (
-    <div className="p-5 space-y-6">
+    <div className="p-4 space-y-4 pb-2">
       
       {/* Header */}
       <div>
-        <p className="text-cp-text-secondary text-xs font-bold uppercase tracking-wider">Academic Tracker</p>
-        <h2 className="text-2xl font-display font-extrabold text-cp-text-primary tracking-tight">Personal Tasks</h2>
+        <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
+        <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Personal Tasks</h2>
       </div>
 
       {/* Logger Alerts */}
       {error && (
-        <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-3 text-sm text-red-500">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
       {success && (
-        <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-3 text-sm text-green-500">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
+        <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-2.5 text-xs text-green-500">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{success}</span>
         </div>
       )}
@@ -230,10 +230,10 @@ const Tasks = () => {
       {/* CREATE / EDIT TASK ACCORDION */}
       {editingTask ? (
         /* EDIT TASK FORM */
-        <form onSubmit={handleUpdateTask} className="p-5 bg-cp-surface border border-cp-border rounded-3xl space-y-4 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+        <form onSubmit={handleUpdateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
           <div className="flex items-center justify-between text-cp-accent">
-            <span className="text-sm font-bold flex items-center">
-              <Edit2 className="w-4 h-4 mr-2" />
+            <span className="text-xs font-bold flex items-center">
+              <Edit2 className="w-3.5 h-3.5 mr-1.5" />
               Edit Task Details
             </span>
             <button 
@@ -241,33 +241,33 @@ const Tasks = () => {
               onClick={() => setEditingTask(null)}
               className="text-cp-text-secondary hover:text-cp-text-primary"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <input
               type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="Task Title (e.g. Finish Record)"
-              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+              className="w-full px-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary placeholder-cp-text-secondary font-medium"
               disabled={updating}
             />
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               placeholder="Task Description (optional)"
-              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent h-20 resize-none text-cp-text-primary placeholder-cp-text-secondary"
+              className="w-full px-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent h-16 resize-none text-cp-text-primary placeholder-cp-text-secondary"
               disabled={updating}
             />
             <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-cp-text-secondary pointer-events-none" />
+              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
               <input
                 type="date"
                 value={editDueDate}
                 onChange={(e) => setEditDueDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary"
+                className="w-full pl-9 pr-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary font-medium"
                 disabled={updating}
               />
             </div>
@@ -277,14 +277,14 @@ const Tasks = () => {
             <button
               type="submit"
               disabled={updating}
-              className="w-1/2 py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold text-xs rounded-xl transition-all"
+              className="w-1/2 py-2.5 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold text-xs rounded-xl transition-all"
             >
               {updating ? 'Saving...' : 'Update Task'}
             </button>
             <button
               type="button"
               onClick={() => setEditingTask(null)}
-              className="w-1/2 py-3 bg-cp-bg hover:bg-cp-accent-light text-cp-text-primary font-semibold text-xs rounded-xl transition-all border border-cp-border"
+              className="w-1/2 py-2.5 bg-cp-bg hover:bg-cp-accent-light text-cp-text-primary font-semibold text-xs rounded-xl transition-all border border-cp-border"
             >
               Cancel
             </button>
@@ -292,19 +292,19 @@ const Tasks = () => {
         </form>
       ) : (
         /* CREATE TASK FORM */
-        <form onSubmit={handleCreateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider flex items-center">
-            <Plus className="w-4 h-4 mr-1 text-cp-accent" />
+        <form onSubmit={handleCreateTask} className="p-3.5 bg-cp-surface border border-cp-border rounded-3xl space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider flex items-center">
+            <Plus className="w-3.5 h-3.5 mr-1 text-cp-accent" />
             Add New Task
           </h3>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs to be done?"
-              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+              className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary font-medium"
               disabled={submitting}
             />
             <input
@@ -312,16 +312,16 @@ const Tasks = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description (optional)"
-              className="w-full px-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+              className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary"
               disabled={submitting}
             />
             <div className="relative">
-              <Calendar className="absolute left-3 top-3.5 w-4 h-4 text-cp-text-secondary pointer-events-none" />
+              <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent text-cp-text-primary"
+                className="w-full pl-9 pr-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary font-medium"
                 disabled={submitting}
               />
             </div>
@@ -330,13 +330,13 @@ const Tasks = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-sm transition-all flex items-center justify-center space-x-1"
+            className="w-full py-2.5 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-xs transition-all flex items-center justify-center space-x-1"
           >
             {submitting ? (
               <div className="w-4 h-4 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>Create Task</span>
               </>
             )}
@@ -345,36 +345,35 @@ const Tasks = () => {
       )}
 
       {/* PENDING TASKS SECTION */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider">
+      <div className="space-y-2.5">
+        <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">
           Pending Tasks ({pendingTasks.length})
         </h3>
         
         {pendingTasks.length === 0 ? (
-          <div className="text-center py-10 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-sm text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            <CheckCircle2 className="w-6 h-6 mx-auto text-green-500" />
+          <div className="text-center py-8 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <CheckCircle2 className="w-5 h-5 mx-auto text-green-500" />
             <p className="font-semibold text-cp-text-primary">All caught up!</p>
-            <p className="text-xs text-cp-text-secondary">No pending academic tasks left.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {pendingTasks.map(task => (
-              <div key={task.id} className="bg-cp-surface border border-cp-border rounded-2xl p-4 flex items-start justify-between shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300">
+              <div key={task.id} className="bg-cp-surface border border-cp-border rounded-2xl p-3 flex items-start justify-between shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300">
                 {/* Left check circle & details */}
-                <div className="flex items-start space-x-3 flex-grow pr-3">
+                <div className="flex items-start space-x-2.5 flex-grow pr-2 min-w-0">
                   <button 
                     onClick={() => handleToggleComplete(task)}
-                    className="mt-1 text-cp-text-secondary/60 hover:text-cp-accent transition-all shrink-0"
+                    className="mt-0.5 text-cp-text-secondary/60 hover:text-cp-accent transition-all shrink-0 cursor-pointer"
                   >
-                    <Square className="w-5 h-5" />
+                    <Square className="w-4.5 h-4.5" />
                   </button>
-                  <div className="space-y-1 truncate max-w-[240px]">
-                    <h4 className="text-sm font-bold text-cp-text-primary leading-tight truncate">{task.title}</h4>
+                  <div className="space-y-0.5 truncate min-w-0 flex-grow">
+                    <h4 className="text-xs font-bold text-cp-text-primary leading-tight truncate">{task.title}</h4>
                     {task.description && (
-                      <p className="text-xs text-cp-text-secondary leading-relaxed truncate">{task.description}</p>
+                      <p className="text-[11px] text-cp-text-secondary leading-normal truncate">{task.description}</p>
                     )}
-                    <span className="inline-flex items-center text-[10px] text-cp-text-secondary font-mono font-medium">
-                      <Calendar className="w-3.5 h-3.5 mr-1" />
+                    <span className="inline-flex items-center text-[9px] text-cp-text-secondary font-mono font-medium mt-0.5">
+                      <Calendar className="w-3 h-3 mr-1 text-cp-text-secondary/60" />
                       {formatDate(task.dueDate)}
                     </span>
                   </div>
@@ -384,15 +383,15 @@ const Tasks = () => {
                 <div className="flex items-center space-x-1 shrink-0">
                   <button
                     onClick={() => handleStartEdit(task)}
-                    className="p-2 text-cp-text-secondary hover:text-cp-accent hover:bg-cp-accent-light rounded-xl transition-all"
+                    className="p-1.5 text-cp-text-secondary hover:text-cp-accent hover:bg-cp-accent-light rounded-lg transition-all"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDeleteTask(task.id)}
-                    className="p-2 text-cp-text-secondary hover:text-red-650 hover:bg-red-500/10 rounded-xl transition-all"
+                    className="p-1.5 text-cp-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -403,35 +402,35 @@ const Tasks = () => {
 
       {/* COMPLETED TASKS SECTION */}
       {completedTasks.length > 0 && (
-        <div className="space-y-3 pt-2">
-          <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider">
+        <div className="space-y-2 pt-1">
+          <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">
             Completed Tasks ({completedTasks.length})
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {completedTasks.map(task => (
-              <div key={task.id} className="bg-cp-surface/60 border border-cp-border rounded-2xl p-4 flex items-start justify-between opacity-60">
-                <div className="flex items-start space-x-3 flex-grow pr-3">
+              <div key={task.id} className="bg-cp-surface/60 border border-cp-border rounded-2xl p-3 flex items-start justify-between opacity-60">
+                <div className="flex items-start space-x-2.5 flex-grow pr-2 min-w-0">
                   <button 
                     onClick={() => handleToggleComplete(task)}
-                    className="mt-1 text-cp-accent transition-all shrink-0"
+                    className="mt-0.5 text-cp-accent transition-all shrink-0 cursor-pointer"
                   >
-                    <CheckSquare className="w-5 h-5" />
+                    <CheckSquare className="w-4.5 h-4.5" />
                   </button>
-                  <div className="space-y-1 truncate max-w-[240px]">
-                    <h4 className="text-sm font-semibold text-cp-text-secondary line-through leading-tight truncate">
+                  <div className="space-y-0.5 truncate min-w-0 flex-grow">
+                    <h4 className="text-xs font-semibold text-cp-text-secondary line-through leading-tight truncate">
                       {task.title}
                     </h4>
                     {task.description && (
-                      <p className="text-xs text-cp-text-secondary/70 line-through leading-relaxed truncate">{task.description}</p>
+                      <p className="text-[11px] text-cp-text-secondary/70 line-through leading-normal truncate">{task.description}</p>
                     )}
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleDeleteTask(task.id)}
-                  className="p-2 text-cp-text-secondary hover:text-red-650 hover:bg-red-500/10 rounded-xl transition-all shrink-0"
+                  className="p-1.5 text-cp-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}

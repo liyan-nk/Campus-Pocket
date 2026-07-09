@@ -25,6 +25,7 @@ Students have read-only access to academic schedules (configured centrally by ad
 ### Frontend Client
 * **Framework:** React 19 / Vite 8 (Single Page Application)
 * **Styling:** Tailwind CSS v4 (native Vite integration)
+* **Theme System:** Custom semantic Light/Dark mode with smooth CSS transitions and local storage persistence
 * **Icons:** Lucide React
 * **Client Proxy:** Dev-server proxy mapping `/api/*` requests to `localhost:8080`
 
@@ -86,11 +87,11 @@ For testing and demonstration, use the following pre-seeded records:
 
 ### Student Interface (Mobile-First Card Layout)
 1. **Login & Activation (`/`):** Unified tabbed portal. Students can enter credentials to log in, or input pre-approved Roll Numbers + Activation Codes to set passwords and activate their account.
-2. **Dashboard (`/dashboard`):** Real-time summary showing local date banner, the upcoming class slot (with name, timings, room), a dynamic greeting, and today's class checklist to mark attendance (Present/Absent). Displays the pending tasks counter.
+2. **Dashboard (`/dashboard`):** Real-time summary showing local date banner, clickable custom profile avatar shortcut (opens settings with pointer shrink animation feedback), the upcoming class slot (with name, timings, room), a dynamic greeting, and today's class checklist to mark attendance (Present/Absent). Displays the pending tasks counter.
 3. **Schedule (`/timetable`):** Read-only swiper displaying the student's weekly schedule day-by-day (e.g. Mon, Tue). Sorted by day and start timings.
 4. **Tracker (`/attendance`):** Self-reported attendance overview. Shows the overall ratio, counter grids, and individual subject cards with progress indicators (warns in amber if a subject falls below 75%).
 5. **Tasks (`/tasks`):** Incomplete task lists sorted by due dates. Includes collapsible inputs to add or edit tasks, completion toggles, and delete controls. Shows completed tasks at the bottom.
-6. **Profile (`/profile`):** Personal detail records with password updates and log out actions.
+6. **Profile (`/profile`):** Personal detail records with password updates, settings to toggle Light/Dark mode, customized avatar initials settings, optimized client-side compressed profile photo uploads (256x256px crop/scale), and log out actions.
 7. **Forced Reset (`/force-password`):** Redirection guard blocking access to other pages if an administrator has flagged the account for a forced password change.
 
 ### Administrator Interface (Control Panel)

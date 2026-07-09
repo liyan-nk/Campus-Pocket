@@ -87,17 +87,17 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cp-bg flex flex-col justify-between py-6 px-4">
+    <div className="min-h-screen bg-cp-bg flex items-center justify-center p-3 select-none">
       {/* Centered Mobile container */}
-      <div className="w-full max-w-md mx-auto my-auto bg-cp-surface rounded-3xl shadow-xl overflow-hidden border border-cp-border flex flex-col">
+      <div className="w-full max-w-[380px] bg-cp-surface rounded-3xl shadow-xl overflow-hidden border border-cp-border flex flex-col">
         
         {/* Banner header */}
-        <div className="bg-cp-accent text-cp-text-on-accent px-6 py-10 text-center relative border-b border-cp-border">
-          <div className="mx-auto w-12 h-12 bg-cp-accent-light/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-3">
-            <Sparkles className="w-6 h-6 text-cp-text-on-accent animate-pulse" />
+        <div className="bg-cp-accent text-cp-text-on-accent px-5 py-6 text-center relative border-b border-cp-border">
+          <div className="mx-auto w-10 h-10 bg-cp-accent-light/10 backdrop-blur-md rounded-xl flex items-center justify-center mb-2">
+            <Sparkles className="w-5 h-5 text-cp-text-on-accent animate-pulse" />
           </div>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">Campus Pocket</h1>
-          <p className="mt-1.5 text-cp-text-on-accent/60 text-xs font-medium uppercase tracking-wider">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight">Campus Pocket</h1>
+          <p className="mt-1 text-cp-text-on-accent/60 text-[10px] font-medium uppercase tracking-wider">
             Verified Student Companion
           </p>
         </div>
@@ -106,7 +106,7 @@ const StudentLogin = () => {
         <div className="flex border-b border-cp-border bg-cp-bg/50">
           <button
             type="button"
-            className={`w-1/2 py-4 text-center font-display text-sm font-semibold transition-all duration-300 ${
+            className={`w-1/2 py-3.5 text-center font-display text-xs font-bold transition-all duration-300 ${
               activeTab === 'login'
                 ? 'text-cp-accent bg-cp-surface border-b-2 border-cp-accent'
                 : 'text-cp-text-secondary hover:text-cp-text-primary'
@@ -121,7 +121,7 @@ const StudentLogin = () => {
           </button>
           <button
             type="button"
-            className={`w-1/2 py-4 text-center font-display text-sm font-semibold transition-all duration-300 ${
+            className={`w-1/2 py-3.5 text-center font-display text-xs font-bold transition-all duration-300 ${
               activeTab === 'activate'
                 ? 'text-cp-accent bg-cp-surface border-b-2 border-cp-accent'
                 : 'text-cp-text-secondary hover:text-cp-text-primary'
@@ -137,26 +137,26 @@ const StudentLogin = () => {
         </div>
 
         {/* Form Body */}
-        <div className="p-6 flex-grow space-y-6">
+        <div className="p-5 flex-grow space-y-4">
           {/* Status Messages */}
           {error && (
-            <div className="mb-5 p-4 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-3 text-sm text-red-500">
-              <ShieldAlert className="w-5 h-5 shrink-0" />
+            <div className="mb-3 p-3 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
+              <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
           {success && (
-            <div className="mb-5 p-4 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-3 text-sm text-green-500">
-              <UserCheck className="w-5 h-5 shrink-0" />
+            <div className="mb-3 p-3 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-2.5 text-xs text-green-500">
+              <UserCheck className="w-4 h-4 shrink-0" />
               <span>{success}</span>
             </div>
           )}
 
           {activeTab === 'login' ? (
             /* LOGIN FORM */
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Roll Number
                 </label>
                 <input
@@ -164,13 +164,13 @@ const StudentLogin = () => {
                   value={rollNo}
                   onChange={(e) => setRollNo(e.target.value)}
                   placeholder="e.g. CS202601"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
                   disabled={submitting}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Password
                 </label>
                 <input
@@ -178,7 +178,7 @@ const StudentLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
                   disabled={submitting}
                 />
               </div>
@@ -186,13 +186,13 @@ const StudentLogin = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full mt-6 py-4 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-display font-semibold rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full mt-5 py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-display font-semibold rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 {submitting ? (
-                  <div className="w-5 h-5 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4.5 h-4.5 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <KeyRound className="w-4 h-4" />
+                    <KeyRound className="w-3.5 h-3.5" />
                     <span>Log In</span>
                   </>
                 )}
@@ -200,9 +200,9 @@ const StudentLogin = () => {
             </form>
           ) : (
             /* ACTIVATION FORM */
-            <form onSubmit={handleActivateSubmit} className="space-y-4">
+            <form onSubmit={handleActivateSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Roll Number
                 </label>
                 <input
@@ -210,13 +210,13 @@ const StudentLogin = () => {
                   value={rollNo}
                   onChange={(e) => setRollNo(e.target.value)}
                   placeholder="e.g. CS202601"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
                   disabled={submitting}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Activation Code
                 </label>
                 <input
@@ -224,13 +224,13 @@ const StudentLogin = () => {
                   value={activationCode}
                   onChange={(e) => setActivationCode(e.target.value)}
                   placeholder="e.g. ACT8888"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all font-mono uppercase"
                   disabled={submitting}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Create Password
                 </label>
                 <input
@@ -238,13 +238,13 @@ const StudentLogin = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
                   disabled={submitting}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-cp-text-secondary uppercase tracking-wider mb-1">
+                <label className="block text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider mb-0.5">
                   Confirm Password
                 </label>
                 <input
@@ -252,7 +252,7 @@ const StudentLogin = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
-                  className="w-full px-4 py-3.5 bg-cp-bg border border-cp-border rounded-2xl text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-2 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
+                  className="w-full px-3 py-2.5 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary focus:outline-none focus:ring-1 focus:ring-cp-accent/20 focus:border-cp-accent transition-all"
                   disabled={submitting}
                 />
               </div>
@@ -260,13 +260,13 @@ const StudentLogin = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full mt-6 py-4 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-display font-semibold rounded-2xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full mt-5 py-3 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-display font-semibold rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 {submitting ? (
-                  <div className="w-5 h-5 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4.5 h-4.5 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <UserCheck className="w-4 h-4" />
+                    <UserCheck className="w-3.5 h-3.5" />
                     <span>Activate & Set Password</span>
                   </>
                 )}
@@ -275,7 +275,7 @@ const StudentLogin = () => {
           )}
         </div>
 
-        <div className="mt-8 text-center text-xs text-cp-text-secondary font-medium p-4">
+        <div className="mt-4 text-center text-[10px] text-cp-text-secondary font-medium p-3 border-t border-cp-border/5 bg-cp-bg/10">
           Contact administrator if you forget your password or need an activation code.
         </div>
       </div>

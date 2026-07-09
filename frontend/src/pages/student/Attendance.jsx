@@ -39,36 +39,36 @@ const Attendance = () => {
   }
 
   return (
-    <div className="p-5 space-y-6">
+    <div className="p-4 space-y-4 pb-2">
       
       {/* Header */}
       <div>
-        <p className="text-cp-text-secondary text-xs font-bold uppercase tracking-wider">Attendance Tracker</p>
-        <h2 className="text-2xl font-display font-extrabold text-cp-text-primary tracking-tight">Overview</h2>
+        <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Attendance Tracker</p>
+        <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Overview</h2>
       </div>
 
       {/* Error alert logger */}
       {error && (
-        <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-3 text-sm text-red-500">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="p-3.5 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* OVERALL ATTENDANCE SUMMARY STATISTICS */}
       {summary && (
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           
           {/* Main overview card */}
-          <div className="bg-cp-accent text-cp-text-on-accent rounded-3xl p-6 shadow-md border border-cp-border/10 flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-cp-text-on-accent/60">
+          <div className="bg-cp-accent text-cp-text-on-accent rounded-3xl p-5 shadow-md border border-cp-border/10 flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-cp-text-on-accent/60">
                 Overall attendance
               </span>
-              <p className="text-3xl font-display font-extrabold tracking-tight">
+              <p className="text-2xl font-display font-extrabold tracking-tight leading-tight">
                 {summary.overallPercentage}%
               </p>
-              <p className="text-xs text-cp-text-on-accent/60 font-medium">
+              <p className="text-[10px] text-cp-text-on-accent/60 font-medium">
                 {summary.overallPercentage >= 75.0 
                   ? 'Meeting college requirements' 
                   : 'Below 75% attendance criteria'}
@@ -76,29 +76,29 @@ const Attendance = () => {
             </div>
             
             {/* Circle progress overlay */}
-            <div className="w-16 h-16 bg-cp-text-on-accent/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-cp-text-on-accent/15 relative">
-              <Percent className="w-6 h-6 text-cp-text-on-accent" />
+            <div className="w-14 h-14 bg-cp-text-on-accent/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-cp-text-on-accent/15 relative shrink-0">
+              <Percent className="w-5 h-5 text-cp-text-on-accent" />
             </div>
           </div>
 
           {/* Quick Counter Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-cp-surface border border-cp-border p-4 rounded-2xl text-center space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-              <p className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">Total</p>
-              <p className="text-lg font-display font-extrabold text-cp-text-primary">{summary.totalClasses}</p>
-              <p className="text-[9px] text-cp-text-secondary font-medium leading-none">Classes Marked</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="bg-cp-surface border border-cp-border p-3 rounded-2xl text-center space-y-0.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <p className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider">Total</p>
+              <p className="text-base font-display font-extrabold text-cp-text-primary leading-tight">{summary.totalClasses}</p>
+              <p className="text-[8px] text-cp-text-secondary font-semibold uppercase leading-none">Marked</p>
             </div>
 
-            <div className="bg-cp-surface border border-cp-border p-4 rounded-2xl text-center space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-              <p className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Present</p>
-              <p className="text-lg font-display font-extrabold text-green-600">{summary.totalPresent}</p>
-              <p className="text-[9px] text-cp-text-secondary font-medium leading-none">Attended</p>
+            <div className="bg-cp-surface border border-cp-border p-3 rounded-2xl text-center space-y-0.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <p className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Present</p>
+              <p className="text-base font-display font-extrabold text-green-600 leading-tight">{summary.totalPresent}</p>
+              <p className="text-[8px] text-cp-text-secondary font-semibold uppercase leading-none">Attended</p>
             </div>
 
-            <div className="bg-cp-surface border border-cp-border p-4 rounded-2xl text-center space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-              <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Absent</p>
-              <p className="text-lg font-display font-extrabold text-red-600">{summary.totalAbsent}</p>
-              <p className="text-[9px] text-cp-text-secondary font-medium leading-none">Missed</p>
+            <div className="bg-cp-surface border border-cp-border p-3 rounded-2xl text-center space-y-0.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <p className="text-[9px] font-bold text-red-500 uppercase tracking-wider">Absent</p>
+              <p className="text-base font-display font-extrabold text-red-600 leading-tight">{summary.totalAbsent}</p>
+              <p className="text-[8px] text-cp-text-secondary font-semibold uppercase leading-none">Missed</p>
             </div>
           </div>
 
@@ -106,40 +106,39 @@ const Attendance = () => {
       )}
 
       {/* SUBJECTS ATTENDANCE STATS CARDS */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-cp-text-secondary uppercase tracking-wider">Subject Analysis</h3>
+      <div className="space-y-2">
+        <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">Subject Analysis</h3>
         
         {summary?.stats?.length === 0 ? (
-          <div className="text-center py-16 bg-cp-surface border border-cp-border rounded-3xl text-sm text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <div className="text-center py-12 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
             <BarChart2 className="w-8 h-8 mx-auto text-cp-text-secondary/55" />
             <p>No classes marked yet.</p>
-            <p className="text-xs text-cp-text-secondary font-medium">Mark class attendance from the dashboard checklist.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {summary?.stats?.map((subj) => {
               const aboveCriteria = subj.percentage >= 75.0;
 
               return (
                 <div 
                   key={subj.subject} 
-                  className="bg-cp-surface border border-cp-border rounded-3xl p-5 space-y-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300"
+                  className="bg-cp-surface border border-cp-border rounded-3xl p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300"
                 >
                   {/* Title and stats summary */}
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-display font-extrabold text-sm text-cp-text-primary tracking-tight">
+                    <div className="min-w-0 pr-2">
+                      <h4 className="font-display font-extrabold text-xs text-cp-text-primary tracking-tight truncate">
                         {subj.subject}
                       </h4>
-                      <p className="text-xs text-cp-text-secondary font-mono font-medium mt-0.5">
+                      <p className="text-[10px] text-cp-text-secondary font-mono font-medium mt-0.5">
                         Present: {subj.present} / Total: {subj.total}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-display font-extrabold text-sm ${aboveCriteria ? 'text-green-600' : 'text-amber-500'}`}>
+                    <div className="text-right shrink-0">
+                      <p className={`font-display font-extrabold text-xs ${aboveCriteria ? 'text-green-600' : 'text-amber-500'}`}>
                         {subj.percentage}%
                       </p>
-                      <p className="text-[9px] text-cp-text-secondary font-bold uppercase tracking-wider">
+                      <p className="text-[8px] text-cp-text-secondary font-bold uppercase tracking-wider">
                         {aboveCriteria ? 'Safe' : 'Shortage'}
                       </p>
                     </div>
@@ -147,7 +146,7 @@ const Attendance = () => {
 
                   {/* Progress Indicator Bar */}
                   <div className="space-y-1">
-                    <div className="w-full h-2 bg-cp-accent-light rounded-full overflow-hidden border border-cp-border/5">
+                    <div className="w-full h-1.5 bg-cp-accent-light rounded-full overflow-hidden border border-cp-border/5">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${
                           aboveCriteria ? 'bg-green-500' : 'bg-amber-500'
@@ -157,8 +156,8 @@ const Attendance = () => {
                     </div>
                     
                     {!aboveCriteria && (
-                      <p className="text-[10px] text-amber-600 font-medium flex items-center">
-                        <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      <p className="text-[9px] text-amber-600 font-medium flex items-center">
+                        <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                         Attendance below 75%. Try not to miss classes.
                       </p>
                     )}

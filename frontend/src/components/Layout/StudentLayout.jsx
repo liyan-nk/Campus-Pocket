@@ -7,7 +7,7 @@ const StudentLayout = () => {
     <div className="mobile-container bg-cp-bg">
       
       {/* Scrollable page body */}
-      <div className="flex-grow overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </div>
 
