@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import API_BASE_URL from '../../config/api';
 import { 
   Sparkles, Calendar, BookOpen, Clock, MapPin, 
   Check, X, ChevronRight, AlertCircle, RefreshCw 
@@ -16,7 +17,9 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/student/dashboard');
+      const response = await fetch(`${API_BASE_URL}/api/student/dashboard`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const result = await response.json();
         setData(result);
@@ -38,9 +41,10 @@ const Dashboard = () => {
     setError('');
     setMarkingId(timetableId);
     try {
-      const response = await fetch('/api/student/attendance/mark', {
+      const response = await fetch(`${API_BASE_URL}/api/student/attendance/mark`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           timetableId,
           date: new Date().toISOString().split('T')[0], // yyyy-MM-dd (local today date)

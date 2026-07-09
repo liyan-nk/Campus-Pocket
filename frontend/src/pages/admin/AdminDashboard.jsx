@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import API_BASE_URL from '../../config/api';
 import { 
   Users, Calendar, LogOut, Search, Plus, UserPlus, Trash2, Edit2, 
   ToggleLeft, ToggleRight, KeyRound, ShieldAlert, CheckCircle2, Clipboard, X
@@ -54,8 +55,12 @@ const AdminDashboard = () => {
   const fetchStudents = async (query = '') => {
     setLoadingStudents(true);
     try {
-      const url = query ? `/api/admin/students/search?q=${encodeURIComponent(query)}` : '/api/admin/students';
-      const response = await fetch(url);
+      const url = query 
+        ? `${API_BASE_URL}/api/admin/students/search?q=${encodeURIComponent(query)}` 
+        : `${API_BASE_URL}/api/admin/students`;
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setStudents(data);
@@ -73,7 +78,9 @@ const AdminDashboard = () => {
   const fetchTimetable = async () => {
     setLoadingTimetable(true);
     try {
-      const response = await fetch('/api/admin/timetable');
+      const response = await fetch(`${API_BASE_URL}/api/admin/timetable`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setTimetable(data);
@@ -114,7 +121,7 @@ const AdminDashboard = () => {
 
     setAddingStudent(true);
     try {
-      const response = await fetch('/api/admin/students', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/students`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,7 +131,8 @@ const AdminDashboard = () => {
           department: department.trim(),
           semester: semester.trim(),
           batch: batch.trim()
-        })
+        }),
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -158,8 +166,9 @@ const AdminDashboard = () => {
   const handleToggleStudent = async (studentRoll) => {
     setError('');
     try {
-      const response = await fetch(`/api/admin/students/${studentRoll}/toggle-status`, {
-        method: 'POST'
+      const response = await fetch(`${API_BASE_URL}/api/admin/students/${studentRoll}/toggle-status`, {
+        method: 'POST',
+        credentials: 'include'
       });
       const data = await response.json();
       if (!response.ok) {
@@ -177,8 +186,9 @@ const AdminDashboard = () => {
     setError('');
     setSuccess('');
     try {
-      const response = await fetch(`/api/admin/students/${studentRoll}/reset-password`, {
-        method: 'POST'
+      const response = await fetch(`${API_BASE_URL}/api/admin/students/${studentRoll}/reset-password`, {
+        method: 'POST',
+        credentials: 'include'
       });
       const data = await response.json();
       if (!response.ok) {
@@ -204,8 +214,9 @@ const AdminDashboard = () => {
     setError('');
     setSuccess('');
     try {
-      const response = await fetch(`/api/admin/students/${studentRoll}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_BASE_URL}/api/admin/students/${studentRoll}`, {
+        method: 'DELETE',
+        credentials: 'include'
       });
       const data = await response.json();
       if (!response.ok) {
@@ -232,12 +243,13 @@ const AdminDashboard = () => {
     setSubmittingTimetable(true);
     try {
       const isEdit = !!editingEntry;
-      const url = isEdit ? `/api/admin/timetable/${editingEntry.id}` : '/api/admin/timetable';
+      const url = isEdit ? `${API_BASE_URL}/api/admin/timetable/${editingEntry.id}` : `${API_BASE_URL}/api/admin/timetable`;
       const method = isEdit ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           department: ttDept.trim(),
           semester: ttSem.trim(),
@@ -315,8 +327,9 @@ const AdminDashboard = () => {
     setError('');
     setSuccess('');
     try {
-      const response = await fetch(`/api/admin/timetable/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_BASE_URL}/api/admin/timetable/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
       });
       const data = await response.json();
       if (!response.ok) {

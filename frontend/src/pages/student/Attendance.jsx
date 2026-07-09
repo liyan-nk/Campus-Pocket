@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import API_BASE_URL from '../../config/api';
 import { Award, AlertCircle, Percent, CheckCircle2, XCircle, BarChart2 } from 'lucide-react';
 
 const Attendance = () => {
@@ -11,7 +12,9 @@ const Attendance = () => {
 
   const fetchAttendanceSummary = async () => {
     try {
-      const response = await fetch('/api/student/attendance/summary');
+      const response = await fetch(`${API_BASE_URL}/api/student/attendance/summary`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setSummary(data);

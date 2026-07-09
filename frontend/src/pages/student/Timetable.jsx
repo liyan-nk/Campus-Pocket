@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import API_BASE_URL from '../../config/api';
 import { Calendar, Clock, User, MapPin, AlertCircle } from 'lucide-react';
 
 const Timetable = () => {
@@ -23,7 +24,9 @@ const Timetable = () => {
 
   const fetchTimetable = async () => {
     try {
-      const response = await fetch('/api/student/timetable');
+      const response = await fetch(`${API_BASE_URL}/api/student/timetable`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setTimetable(data);

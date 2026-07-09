@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import API_BASE_URL from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -9,7 +10,9 @@ export const AuthProvider = ({ children }) => {
   // Check auth status on load
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status');
+      const response = await fetch(`${API_BASE_URL}/api/auth/status`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.authenticated) {
@@ -33,10 +36,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const loginStudent = async (rollNo, password) => {
-    const response = await fetch('/api/auth/student/login', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/student/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rollNo, password }),
+      credentials: 'include',
     });
     
     const data = await response.json();
@@ -48,10 +52,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const loginAdmin = async (username, password) => {
-    const response = await fetch('/api/auth/admin/login', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
+      credentials: 'include',
     });
 
     const data = await response.json();
@@ -63,10 +68,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const activateStudent = async (rollNo, activationCode, password) => {
-    const response = await fetch('/api/auth/student/activate', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/student/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rollNo, activationCode, password }),
+      credentials: 'include',
     });
 
     const data = await response.json();
@@ -78,7 +84,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
     } catch (e) {
       console.error('Logout error:', e);
     } finally {
@@ -87,10 +96,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const changePassword = async (oldPassword, newPassword) => {
-    const response = await fetch('/api/auth/change-password', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ oldPassword, newPassword }),
+      credentials: 'include',
     });
 
     const data = await response.json();

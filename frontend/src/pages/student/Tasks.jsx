@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../../config/api';
 import { 
   CheckSquare, Square, Trash2, Edit2, Plus, 
   Calendar, AlertCircle, CheckCircle2, ListTodo, X 
@@ -25,7 +26,9 @@ const Tasks = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/student/tasks');
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setTasks(data);
@@ -55,9 +58,10 @@ const Tasks = () => {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/student/tasks', {
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || null,
@@ -86,9 +90,10 @@ const Tasks = () => {
   const handleToggleComplete = async (task) => {
     setError('');
     try {
-      const response = await fetch(`/api/student/tasks/${task.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks/${task.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           title: task.title,
           description: task.description,
@@ -127,9 +132,10 @@ const Tasks = () => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/student/tasks/${editingTask.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks/${editingTask.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           title: editTitle.trim(),
           description: editDescription.trim() || null,
@@ -158,8 +164,9 @@ const Tasks = () => {
     setError('');
     setSuccess('');
     try {
-      const response = await fetch(`/api/student/tasks/${taskId}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks/${taskId}`, {
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (!response.ok) {
