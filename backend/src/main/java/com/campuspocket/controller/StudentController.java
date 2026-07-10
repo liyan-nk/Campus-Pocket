@@ -58,10 +58,19 @@ public class StudentController {
         return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceSummary(rollNo));
     }
 
-    @GetMapping("/attendance/history")
-    public ResponseEntity<List<AttendanceHistoryResponse>> getAttendanceHistory(Authentication authentication) {
+    @GetMapping("/attendance/dates")
+    public ResponseEntity<List<String>> getAttendanceDates(Authentication authentication) {
         String rollNo = authentication.getName();
-        return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceHistory(rollNo));
+        return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceDates(rollNo));
+    }
+
+    @GetMapping("/attendance/history")
+    public ResponseEntity<List<AttendanceHistoryResponse>> getAttendanceHistoryByDate(
+            @RequestParam("date") String dateString,
+            Authentication authentication) {
+        String rollNo = authentication.getName();
+        java.time.LocalDate date = java.time.LocalDate.parse(dateString);
+        return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceHistoryByDate(rollNo, date));
     }
 
     @PostMapping("/attendance/mark")

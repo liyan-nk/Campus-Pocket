@@ -207,11 +207,23 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
     }
 
     @Override
-    public List<AttendanceHistoryResponse> getAttendanceHistory(String rollNo) {
+    public List<String> getAttendanceDates(String rollNo) {
+        Student student = studentRepository.findByRollNo(rollNo)
+            .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+        List<LocalDate> dates = attendanceRepository.findDistinctDatesByStudentRollNoOrderByDateDesc(rollNo);
+        List<String> formattedDates = new ArrayList<>();
+        for (LocalDate d : dates) {
+            formattedDates.add(d.toString());
+        }
+        return formattedDates;
+    }
+
+    @Override
+    public List<AttendanceHistoryResponse> getAttendanceHistoryByDate(String rollNo, LocalDate date) {
         Student student = studentRepository.findByRollNo(rollNo)
             .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
-        List<Attendance> records = attendanceRepository.findTop60ByStudentRollNoOrderByDateDesc(rollNo);
+        List<Attendance> records = attendanceRepository.findByStudentRollNoAndDate(rollNo, date);
         List<AttendanceHistoryResponse> history = new ArrayList<>();
 
         for (Attendance a : records) {
@@ -243,12 +255,8 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
             ));
         }
 
-        // Sort by date desc, then by start time desc to make it deterministic (latest first)
+        // Sort chronologically by start time desc (latest first)
         history.sort((h1, h2) -> {
-            int dateComp = h2.getDate().compareTo(h1.getDate());
-            if (dateComp != 0) {
-                return dateComp;
-            }
             if (h2.getStartTime() != null && h1.getStartTime() != null) {
                 return h2.getStartTime().compareTo(h1.getStartTime());
             }
