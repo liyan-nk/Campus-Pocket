@@ -1,8 +1,10 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Home, Calendar, Award, ListTodo, User } from 'lucide-react';
 
 const StudentLayout = () => {
+  const location = useLocation();
+  const isTrackerActive = location.pathname === '/attendance' || location.pathname === '/attendance/history';
   return (
     <div className="mobile-container bg-cp-bg">
       
@@ -40,11 +42,9 @@ const StudentLayout = () => {
 
         <NavLink
           to="/attendance"
-          className={({ isActive }) =>
-            `flex flex-col items-center justify-center space-y-1 w-14 h-14 rounded-2xl transition-all duration-300 ${
-              isActive ? 'text-cp-accent' : 'text-cp-text-secondary hover:text-cp-text-primary'
-            }`
-          }
+          className={`flex flex-col items-center justify-center space-y-1 w-14 h-14 rounded-2xl transition-all duration-300 ${
+            isTrackerActive ? 'text-cp-accent' : 'text-cp-text-secondary hover:text-cp-text-primary'
+          }`}
         >
           <Award className="w-5 h-5" />
           <span className="text-[9px] font-bold tracking-wide uppercase">Tracker</span>

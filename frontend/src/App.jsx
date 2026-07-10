@@ -9,6 +9,7 @@ import ForcePassword from './pages/student/ForcePassword';
 import Dashboard from './pages/student/Dashboard';
 import Timetable from './pages/student/Timetable';
 import Attendance from './pages/student/Attendance';
+import AttendanceHistory from './pages/student/AttendanceHistory';
 import Profile from './pages/student/Profile';
 import Tasks from './pages/student/Tasks';
 import AdminLogin from './pages/admin/AdminLogin';
@@ -90,6 +91,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/timetable" element={<Timetable />} />
             <Route path="/attendance" element={<Attendance />} />
+            <Route path="/attendance/history" element={<AttendanceHistory />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
