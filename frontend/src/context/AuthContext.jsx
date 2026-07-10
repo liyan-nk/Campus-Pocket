@@ -3,11 +3,37 @@ import API_BASE_URL from '../config/api';
 
 const AuthContext = createContext(null);
 
+const safeGetItem = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn(`localStorage read failed for key ${key}:`, e);
+    return null;
+  }
+};
+
+const safeSetItem = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`localStorage write failed for key ${key}:`, e);
+  }
+};
+
+const safeRemoveItem = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.warn(`localStorage remove failed for key ${key}:`, e);
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
+    const stored = safeGetItem('cp_user_data');
+    if (!stored) return null;
     try {
-      const stored = localStorage.getItem('cp_user_data');
-      return stored ? JSON.parse(stored) : null;
+      return JSON.parse(stored);
     } catch (e) {
       return null;
     }
@@ -24,16 +50,16 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         if (data.authenticated) {
           setUser(data);
-          localStorage.setItem('cp_user_data', JSON.stringify(data));
+          safeSetItem('cp_user_data', JSON.stringify(data));
         } else {
           setUser(null);
-          localStorage.removeItem('cp_user_data');
+          safeRemoveItem('cp_user_data');
         }
         setLoading(false);
       } else {
         if (response.status === 401) {
           setUser(null);
-          localStorage.removeItem('cp_user_data');
+          safeRemoveItem('cp_user_data');
           setLoading(false);
         } else {
           // Keep current state on other temporary errors and retry
@@ -67,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Login failed');
     }
     setUser(data);
-    localStorage.setItem('cp_user_data', JSON.stringify(data));
+    safeSetItem('cp_user_data', JSON.stringify(data));
     return data;
   };
 
@@ -84,7 +110,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Admin login failed');
     }
     setUser(data);
-    localStorage.setItem('cp_user_data', JSON.stringify(data));
+    safeSetItem('cp_user_data', JSON.stringify(data));
     return data;
   };
 
@@ -113,7 +139,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', e);
     } finally {
       setUser(null);
-      localStorage.removeItem('cp_user_data');
+      safeRemoveItem('cp_user_data');
     }
   };
 
@@ -133,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       const updatedUser = { ...user, mustChangePassword: false };
       setUser(updatedUser);
-      localStorage.setItem('cp_user_data', JSON.stringify(updatedUser));
+      safeSetItem('cp_user_data', JSON.stringify(updatedUser));
     }
     return data;
   };
@@ -145,9 +171,9 @@ export const AuthProvider = ({ children }) => {
   // Sync avatar data from localStorage on user change
   useEffect(() => {
     if (user && user.role !== 'ADMIN') {
-      const mode = localStorage.getItem(`cp_avatar_${user.username}_mode`) || 'initials';
-      const initials = localStorage.getItem(`cp_avatar_${user.username}_initials`) || user.name?.charAt(0) || '';
-      const img = localStorage.getItem(`cp_avatar_${user.username}_image`) || '';
+      const mode = safeGetItem(`cp_avatar_${user.username}_mode`) || 'initials';
+      const initials = safeGetItem(`cp_avatar_${user.username}_initials`) || user.name?.charAt(0) || '';
+      const img = safeGetItem(`cp_avatar_${user.username}_image`) || '';
       
       setAvatarMode(mode);
       setAvatarInitials(initials);
@@ -162,9 +188,9 @@ export const AuthProvider = ({ children }) => {
   // Future-proof avatar update logic (can be redirected to backend later)
   const updateAvatar = async (mode, initials, imageBase64) => {
     if (!user) return;
-    localStorage.setItem(`cp_avatar_${user.username}_mode`, mode);
-    localStorage.setItem(`cp_avatar_${user.username}_initials`, initials);
-    localStorage.setItem(`cp_avatar_${user.username}_image`, imageBase64);
+    safeSetItem(`cp_avatar_${user.username}_mode`, mode);
+    safeSetItem(`cp_avatar_${user.username}_initials`, initials);
+    safeSetItem(`cp_avatar_${user.username}_image`, imageBase64);
     
     setAvatarMode(mode);
     setAvatarInitials(initials);

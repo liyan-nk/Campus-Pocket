@@ -206,6 +206,58 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
         );
     }
 
+    @Override
+    public List<AttendanceHistoryResponse> getAttendanceHistory(String rollNo) {
+        Student student = studentRepository.findByRollNo(rollNo)
+            .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+        List<Attendance> records = attendanceRepository.findTop60ByStudentRollNoOrderByDateDesc(rollNo);
+        List<AttendanceHistoryResponse> history = new ArrayList<>();
+
+        for (Attendance a : records) {
+            Timetable t = a.getTimetable();
+            String subjectName = t.getSubjectName();
+            if (subjectName == null || subjectName.isBlank()) {
+                if (t.getSubject() != null && t.getSubject().contains("(")) {
+                    subjectName = t.getSubject().split("\\(")[0].trim();
+                } else {
+                    subjectName = t.getSubject();
+                }
+            }
+            String subjectCode = t.getSubjectCode();
+            if (subjectCode == null || subjectCode.isBlank()) {
+                if (t.getSubject() != null && t.getSubject().contains("(")) {
+                    int start = t.getSubject().indexOf('(');
+                    int end = t.getSubject().indexOf(')');
+                    if (start != -1 && end != -1 && end > start + 1) {
+                        subjectCode = t.getSubject().substring(start + 1, end).trim();
+                    }
+                }
+            }
+            history.add(new AttendanceHistoryResponse(
+                a.getDate(),
+                subjectName,
+                subjectCode,
+                t.getStartTime(),
+                a.getStatus()
+            ));
+        }
+
+        // Sort by date desc, then by start time desc to make it deterministic (latest first)
+        history.sort((h1, h2) -> {
+            int dateComp = h2.getDate().compareTo(h1.getDate());
+            if (dateComp != 0) {
+                return dateComp;
+            }
+            if (h2.getStartTime() != null && h1.getStartTime() != null) {
+                return h2.getStartTime().compareTo(h1.getStartTime());
+            }
+            return 0;
+        });
+
+        return history;
+    }
+
     // HELPERS
 
     private String normalizeDepartment(String dept) {

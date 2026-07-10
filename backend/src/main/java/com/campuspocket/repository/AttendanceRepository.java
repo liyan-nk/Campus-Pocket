@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByStudentRollNo(String rollNo);
+    List<Attendance> findTop60ByStudentRollNoOrderByDateDesc(String rollNo);
     List<Attendance> findByStudentRollNoAndDate(String rollNo, LocalDate date);
     Optional<Attendance> findByStudentRollNoAndTimetableIdAndDate(String rollNo, Long timetableId, LocalDate date);
     void deleteByStudentRollNo(String rollNo);

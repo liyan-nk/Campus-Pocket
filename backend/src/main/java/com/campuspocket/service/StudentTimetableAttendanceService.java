@@ -10,4 +10,5 @@ public interface StudentTimetableAttendanceService {
     void markAttendance(String rollNo, AttendanceMarkRequest request);
     AttendanceSummaryResponse getAttendanceSummary(String rollNo);
     StudentDashboardResponse getStudentDashboard(String rollNo, java.time.LocalDate todayDate, java.time.LocalTime nowTime);
+    List<AttendanceHistoryResponse> getAttendanceHistory(String rollNo);
 }

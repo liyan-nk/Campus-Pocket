@@ -58,6 +58,12 @@ public class StudentController {
         return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceSummary(rollNo));
     }
 
+    @GetMapping("/attendance/history")
+    public ResponseEntity<List<AttendanceHistoryResponse>> getAttendanceHistory(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentTimetableAttendanceService.getAttendanceHistory(rollNo));
+    }
+
     @PostMapping("/attendance/mark")
     public ResponseEntity<?> markAttendance(@Valid @RequestBody AttendanceMarkRequest request, Authentication authentication) {
         String rollNo = authentication.getName();

@@ -15,7 +15,11 @@ class ErrorBoundary extends React.Component {
   }
 
   handleLogout = () => {
-    localStorage.clear();
+    try {
+      localStorage.clear();
+    } catch (e) {
+      console.warn('localStorage clear failed:', e);
+    }
     // Use root redirect path to reset React state cleanly
     window.location.href = '/';
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../../config/api';
+import { parseLocalDate, formatTime12Hour } from '../../utils/dateUtils';
 import { 
   Sparkles, Calendar, BookOpen, Clock, MapPin, 
   Check, X, ChevronRight, AlertCircle, RefreshCw, User 
@@ -130,7 +131,7 @@ const Dashboard = () => {
   // Format date helper: "Tuesday, July 7"
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
+    const date = (dateString instanceof Date) ? dateString : parseLocalDate(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
@@ -286,7 +287,7 @@ const Dashboard = () => {
               <div className="flex items-center">
                 <Clock className="w-3.5 h-3.5 mr-1.5" />
                 <span className="font-mono">
-                  {(data.nextClass?.timetable?.startTime || '').substring(0, 5)} - {(data.nextClass?.timetable?.endTime || '').substring(0, 5)}
+                  {formatTime12Hour(data.nextClass?.timetable?.startTime)} - {formatTime12Hour(data.nextClass?.timetable?.endTime)}
                 </span>
               </div>
               <div className="flex items-center">
@@ -344,7 +345,7 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-2 text-[10px] text-cp-text-secondary">
                       <span className="font-mono flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
-                        {(cls?.timetable?.startTime || '').substring(0, 5)}
+                        {formatTime12Hour(cls?.timetable?.startTime)}
                       </span>
                       <span className="flex items-center">
                         <MapPin className="w-3 h-3 mr-1" />

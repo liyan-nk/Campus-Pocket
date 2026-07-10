@@ -34,16 +34,24 @@ const Profile = () => {
   const [customInitials, setCustomInitials] = useState('');
 
   // Theme state
-  const [theme, setTheme] = useState(
-    localStorage.getItem('theme') || 
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-  );
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('theme') || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (e) {
+      return 'light';
+    }
+  });
 
   // Toggle theme
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {
+      console.warn('localStorage theme save failed:', e);
+    }
     if (newTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -60,10 +68,14 @@ const Profile = () => {
         setProfile(data);
         setCustomInitials(avatarInitials || data.name.charAt(0));
       } else {
-        setError('Failed to load profile data.');
+        const errData = await response.json().catch(() => ({}));
+        const msg = errData.message || `Failed to load profile data (Server returned ${response.status}).`;
+        setError(msg);
+        console.error('Profile fetch failed:', response.status, errData);
       }
     } catch (err) {
-      setError('Connection error. Failed to load profile.');
+      setError(`Connection error. Failed to load profile (${err.message}).`);
+      console.error('Profile fetch connection error:', err);
     } finally {
       setLoading(false);
     }

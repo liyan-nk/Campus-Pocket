@@ -4,6 +4,7 @@ import {
   CheckSquare, Square, Trash2, Edit2, Plus, 
   Calendar, AlertCircle, CheckCircle2, ListTodo, X 
 } from 'lucide-react';
+import { parseLocalDate } from '../../utils/dateUtils';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -218,23 +219,7 @@ const Tasks = () => {
   // Format date helper: "Jul 7" (Timezone safe)
   const formatShortDate = (dateString) => {
     if (!dateString) return '';
-    
-    // Check if it is a string representation or an object/Date
-    let date;
-    if (typeof dateString === 'string') {
-      const parts = dateString.split('-');
-      if (parts.length === 3) {
-        const year = parseInt(parts[0], 10);
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        date = new Date(year, monthIndex, day);
-      } else {
-        date = new Date(dateString);
-      }
-    } else {
-      date = new Date(dateString);
-    }
-    
+    const date = (dateString instanceof Date) ? dateString : parseLocalDate(dateString);
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'
@@ -247,21 +232,7 @@ const Tasks = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    let due;
-    if (typeof task.dueDate === 'string') {
-      const parts = task.dueDate.split('-');
-      if (parts.length === 3) {
-        const year = parseInt(parts[0], 10);
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        due = new Date(year, monthIndex, day);
-      } else {
-        due = new Date(task.dueDate);
-      }
-    } else {
-      due = new Date(task.dueDate);
-    }
-    
+    const due = (task.dueDate instanceof Date) ? task.dueDate : parseLocalDate(task.dueDate);
     due.setHours(0, 0, 0, 0);
     return due < today;
   };

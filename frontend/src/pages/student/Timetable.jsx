@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
 import { Calendar, Clock, User, MapPin, AlertCircle } from 'lucide-react';
+import { formatTime12Hour } from '../../utils/dateUtils';
 
 const Timetable = () => {
   const { user } = useAuth();
@@ -31,10 +32,14 @@ const Timetable = () => {
         const data = await response.json();
         setTimetable(data);
       } else {
-        setError('Failed to load timetable.');
+        const errData = await response.json().catch(() => ({}));
+        const msg = errData.message || `Failed to load timetable (Server returned ${response.status}).`;
+        setError(msg);
+        console.error('Timetable fetch failed:', response.status, errData);
       }
     } catch (err) {
-      setError('Connection error. Failed to load timetable.');
+      setError(`Connection error. Failed to load timetable (${err.message}).`);
+      console.error('Timetable fetch connection error:', err);
     } finally {
       setLoading(false);
     }
@@ -192,7 +197,7 @@ const Timetable = () => {
                   <div className="flex items-center">
                     <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
                     <span className="font-mono font-medium text-cp-text-primary">
-                      {(slot.startTime || '').substring(0, 5)} - {(slot.endTime || '').substring(0, 5)}
+                      {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
                     </span>
                   </div>
                   <div className="flex items-center">
