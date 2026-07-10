@@ -7,19 +7,29 @@ public class AuthStatusResponse {
     private String username;
     private String name;
     private boolean mustChangePassword;
+    private String avatarUrl;
 
     public AuthStatusResponse() {
     }
 
-    public AuthStatusResponse(boolean authenticated, String role, String username, String name, boolean mustChangePassword) {
+    public AuthStatusResponse(boolean authenticated, String role, String username, String name, boolean mustChangePassword, String avatarUrl) {
         this.authenticated = authenticated;
         this.role = role;
         this.username = username;
         this.name = name;
         this.mustChangePassword = mustChangePassword;
+        this.avatarUrl = avatarUrl;
     }
 
     // Getters and Setters
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
     public boolean isAuthenticated() {
         return authenticated;
     }

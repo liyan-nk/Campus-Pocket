@@ -31,7 +31,8 @@ public class SecurityConfig {
                     "/api/auth/student/activate",
                     "/api/auth/student/login",
                     "/api/auth/admin/login",
-                    "/api/auth/status"
+                    "/api/auth/status",
+                    "/uploads/**"
                 ).permitAll()
                 .requestMatchers("/h2-console/**").permitAll() // Dev database console
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

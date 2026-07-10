@@ -1,10 +1,10 @@
 package com.campuspocket.service;
 
 import com.campuspocket.dto.StudentProfileResponse;
-import com.campuspocket.dto.StudentAvatarDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface StudentService {
     StudentProfileResponse getStudentProfile(String rollNo);
-    StudentAvatarDTO getStudentAvatar(String rollNo);
-    void updateStudentAvatar(String rollNo, StudentAvatarDTO dto);
+    String uploadAvatar(String rollNo, MultipartFile file);
+    void deleteAvatar(String rollNo);
 }

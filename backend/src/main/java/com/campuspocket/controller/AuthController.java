@@ -71,7 +71,7 @@ public class AuthController {
             HttpSession session = httpRequest.getSession(true);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
             
-            AuthStatusResponse status = new AuthStatusResponse(true, "STUDENT", student.getRollNo(), student.getName(), student.isMustChangePassword());
+            AuthStatusResponse status = new AuthStatusResponse(true, "STUDENT", student.getRollNo(), student.getName(), student.isMustChangePassword(), student.getAvatarUrl());
             return ResponseEntity.ok(status);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Incorrect Roll Number or password."));
@@ -88,7 +88,7 @@ public class AuthController {
             HttpSession session = httpRequest.getSession(true);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
             
-            AuthStatusResponse status = new AuthStatusResponse(true, "ADMIN", request.getUsername(), "Administrator", false);
+            AuthStatusResponse status = new AuthStatusResponse(true, "ADMIN", request.getUsername(), "Administrator", false, null);
             return ResponseEntity.ok(status);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Incorrect username or password."));

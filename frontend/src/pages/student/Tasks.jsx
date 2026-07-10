@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
 import { 
-  CheckSquare, Square, Trash2, Edit2, Plus, 
-  Calendar, AlertCircle, CheckCircle2, ListTodo, X 
+  Plus, Trash2, Calendar, AlertCircle, CheckCircle2, ListTodo, X, Edit2, Loader2 
 } from 'lucide-react';
 import { parseLocalDate } from '../../utils/dateUtils';
-import { getCachedData, setCachedData } from '../../utils/dataCache';
+import { getCachedData, setCachedData, isCacheValid, invalidateCache } from '../../utils/dataCache';
+import PullToRefresh from '../../components/PullToRefresh';
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState(() => getCachedData('tasks') || []);
-  const [loading, setLoading] = useState(!getCachedData('tasks'));
+  const { user } = useAuth();
+  
+  const [tasks, setTasks] = useState(() => getCachedData('tasks', user?.username) || []);
+  const [loading, setLoading] = useState(() => !getCachedData('tasks', user?.username));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [showUpdatedToast, setShowUpdatedToast] = useState(false);
 
-  // Form states
+  // Task creation/editing states
+  const [editingTask, setEditingTask] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+
+  // Submit button loader
   const [submitting, setSubmitting] = useState(false);
 
-  // Edit states
-  const [editingTask, setEditingTask] = useState(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editDueDate, setEditDueDate] = useState('');
-  const [updating, setUpdating] = useState(false);
-
-  const fetchTasks = async () => {
+  const fetchTasks = async (force = false) => {
+    const username = user?.username;
+    if (!force && isCacheValid('tasks', username)) {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks`, {
         credentials: 'include'
@@ -34,7 +44,8 @@ const Tasks = () => {
       if (response.ok) {
         const data = await response.json();
         setTasks(data);
-        setCachedData('tasks', data);
+        setCachedData('tasks', username, data);
+        setError('');
       } else {
         setError('Failed to fetch tasks.');
       }
@@ -47,28 +58,39 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, []);
 
-  const getTodayString = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    const goOnline = () => {
+      setIsOffline(false);
+      fetchTasks(true);
+    };
+    const goOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, [user]);
+
+  const handlePullRefresh = async () => {
+    await fetchTasks(true);
+    setShowUpdatedToast(true);
+    setTimeout(() => setShowUpdatedToast(false), 2000);
   };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    if (isOffline) {
+      setError('Cannot add tasks while offline.');
+      return;
+    }
     setError('');
     setSuccess('');
 
-    if (!title.trim()) {
-      setError('Task title is required.');
-      return;
-    }
-
-    if (dueDate && dueDate < getTodayString()) {
-      setError('Deadline cannot be in the past.');
+    if (!title.trim() || !dueDate) {
+      setError('Title and Due Date are required.');
       return;
     }
 
@@ -77,148 +99,179 @@ const Tasks = () => {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || null,
-          dueDate: dueDate || null,
-          completed: false
-        })
+        body: JSON.stringify({ title, description, dueDate }),
+        credentials: 'include'
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create task.');
-      }
+      if (response.ok) {
+        const newTask = await response.json();
+        const updatedList = [...tasks, newTask];
+        setTasks(updatedList);
+        setCachedData('tasks', user?.username, updatedList);
+        
+        // Force refresh dependent counts
+        invalidateCache('dashboard', user?.username);
 
-      setSuccess('Task created successfully!');
-      setTitle('');
-      setDescription('');
-      setDueDate('');
-      fetchTasks();
+        setTitle('');
+        setDescription('');
+        setDueDate('');
+        setShowCreateForm(false);
+        setSuccess('Task created successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.message || 'Failed to create task.');
+      }
     } catch (err) {
-      setError(err.message);
+      setError('Connection error. Failed to save task.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleToggleComplete = async (task) => {
+  const handleToggleCompleted = async (task) => {
+    if (isOffline) {
+      setError('Cannot complete tasks while offline.');
+      return;
+    }
     setError('');
-    
-    // Back up the previous tasks state
-    const previousTasks = [...tasks];
-    
-    // Optimistic state update: toggle the target task completed status instantly
-    const updatedTasks = tasks.map(t => 
-      t.id === task.id ? { ...t, completed: !t.completed } : t
-    );
-    setTasks(updatedTasks);
+    const originalTasks = [...tasks];
+
+    // Optimistic toggle
+    const toggledCompleted = !task.completed;
+    const updatedList = tasks.map(t => {
+      if (t.id === task.id) {
+        return { ...t, completed: toggledCompleted };
+      }
+      return t;
+    });
+    setTasks(updatedList);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/student/tasks/${task.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/student/tasks/${task.id}/toggle`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: task.title,
-          description: task.description,
-          dueDate: task.dueDate,
-          completed: !task.completed
-        })
+        credentials: 'include'
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to update task.');
+      if (response.ok) {
+        setCachedData('tasks', user?.username, updatedList);
+        invalidateCache('dashboard', user?.username);
+      } else {
+        throw new Error('Failed to update task.');
       }
-      
-      // Keep optimistic state on success without reloading the whole list
     } catch (err) {
-      // Roll back to previous tasks state on failure
-      setTasks(previousTasks);
-      setError(err.message);
+      setError(err.message || 'Connection error.');
+      setTasks(originalTasks);
     }
-  };
-
-  const handleStartEdit = (task) => {
-    setEditingTask(task);
-    setEditTitle(task.title);
-    setEditDescription(task.description || '');
-    setEditDueDate(task.dueDate || '');
   };
 
   const handleUpdateTask = async (e) => {
     e.preventDefault();
+    if (isOffline) {
+      setError('Cannot edit tasks while offline.');
+      return;
+    }
     setError('');
     setSuccess('');
 
-    if (!editTitle.trim()) {
-      setError('Task title is required.');
+    if (!title.trim() || !dueDate) {
+      setError('Title and Due Date are required.');
       return;
     }
 
-    if (editDueDate && editDueDate < getTodayString()) {
-      setError('Deadline cannot be in the past.');
-      return;
-    }
-
-    setUpdating(true);
+    setSubmitting(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks/${editingTask.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: editTitle.trim(),
-          description: editDescription.trim() || null,
-          dueDate: editDueDate || null,
-          completed: editingTask.completed
-        })
+        body: JSON.stringify({ title, description, dueDate }),
+        credentials: 'include'
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to update task.');
-      }
+      if (response.ok) {
+        const updatedTask = await response.json();
+        const updatedList = tasks.map(t => t.id === editingTask.id ? updatedTask : t);
+        setTasks(updatedList);
+        setCachedData('tasks', user?.username, updatedList);
+        invalidateCache('dashboard', user?.username);
 
-      setSuccess('Task updated successfully!');
-      setEditingTask(null);
-      fetchTasks();
+        setEditingTask(null);
+        setTitle('');
+        setDescription('');
+        setDueDate('');
+        setSuccess('Task updated successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.message || 'Failed to update task.');
+      }
     } catch (err) {
-      setError(err.message);
+      setError('Connection error. Failed to update task.');
     } finally {
-      setUpdating(false);
+      setSubmitting(false);
     }
   };
 
   const handleDeleteTask = async (taskId) => {
+    if (isOffline) {
+      setError('Cannot delete tasks while offline.');
+      return;
+    }
     if (!window.confirm('Delete this task?')) return;
     setError('');
-    setSuccess('');
+    const originalTasks = [...tasks];
+
+    // Optimistic delete
+    const updatedList = tasks.filter(t => t.id !== taskId);
+    setTasks(updatedList);
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks/${taskId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete task.');
+      if (response.ok) {
+        setCachedData('tasks', user?.username, updatedList);
+        invalidateCache('dashboard', user?.username);
+      } else {
+        throw new Error('Failed to delete task.');
       }
-
-      setSuccess('Task deleted successfully.');
-      fetchTasks();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Connection error.');
+      setTasks(originalTasks);
     }
   };
 
-  // Split tasks
-  const pendingTasks = tasks.filter(t => !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const startEditTask = (task) => {
+    if (isOffline) {
+      setError('Cannot edit tasks while offline.');
+      return;
+    }
+    setEditingTask(task);
+    setTitle(task.title);
+    setDescription(task.description || '');
+    // Format YYYY-MM-DD
+    const dateVal = task.dueDate instanceof Date ? task.dueDate : parseLocalDate(task.dueDate);
+    const y = dateVal.getFullYear();
+    const m = String(dateVal.getMonth() + 1).padStart(2, '0');
+    const d = String(dateVal.getDate()).padStart(2, '0');
+    setDueDate(`${y}-${m}-${d}`);
+    setShowCreateForm(false);
+  };
 
-  // Format date helper: "Jul 7" (Timezone safe)
+  const startCreateTask = () => {
+    if (isOffline) {
+      setError('Cannot add tasks while offline.');
+      return;
+    }
+    setEditingTask(null);
+    setTitle('');
+    setDescription('');
+    setDueDate('');
+    setShowCreateForm(true);
+  };
+
   const formatShortDate = (dateString) => {
     if (!dateString) return '';
     const date = (dateString instanceof Date) ? dateString : parseLocalDate(dateString);
@@ -228,275 +281,203 @@ const Tasks = () => {
     });
   };
 
-  // Overdue calculation helper (Timezone safe)
   const isOverdue = (task) => {
     if (!task.dueDate || task.completed) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const due = (task.dueDate instanceof Date) ? task.dueDate : parseLocalDate(task.dueDate);
     due.setHours(0, 0, 0, 0);
     return due < today;
   };
 
-
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 space-y-4 pb-2">
-      
-      {/* Header */}
-      <div>
-        <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
-        <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Personal Tasks</h2>
-      </div>
-
-      {/* Logger Alerts */}
-      {error && (
-        <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-2.5 text-xs text-green-500">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
-
-      {/* CREATE / EDIT TASK ACCORDION */}
-      {editingTask ? (
-        /* EDIT TASK FORM */
-        <form onSubmit={handleUpdateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <div className="flex items-center justify-between text-cp-accent">
-            <span className="text-xs font-bold flex items-center">
-              <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-              Edit Task Details
-            </span>
-            <button 
-              type="button" 
-              onClick={() => setEditingTask(null)}
-              className="text-cp-text-secondary hover:text-cp-text-primary"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="Task Title (e.g. Finish Record)"
-              className="w-full px-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary placeholder-cp-text-secondary font-medium"
-              disabled={updating}
-            />
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Task Description (optional)"
-              className="w-full px-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent h-16 resize-none text-cp-text-primary placeholder-cp-text-secondary"
-              disabled={updating}
-            />
-            <div className="space-y-1">
-              <label className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider block px-1">Due Date / Deadline</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
-                <input
-                  type="date"
-                  value={editDueDate}
-                  min={getTodayString()}
-                  onChange={(e) => setEditDueDate(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary font-medium"
-                  disabled={updating}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex space-x-2">
-            <button
-              type="submit"
-              disabled={updating}
-              className="w-1/2 py-2.5 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold text-xs rounded-xl transition-all"
-            >
-              {updating ? 'Saving...' : 'Update Task'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingTask(null)}
-              className="w-1/2 py-2.5 bg-cp-bg hover:bg-cp-accent-light text-cp-text-primary font-semibold text-xs rounded-xl transition-all border border-cp-border"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        /* CREATE TASK FORM */
-        <form onSubmit={handleCreateTask} className="p-3.5 bg-cp-surface border border-cp-border rounded-3xl space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider flex items-center">
-            <Plus className="w-3.5 h-3.5 mr-1 text-cp-accent" />
-            Add New Task
-          </h3>
-          
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What needs to be done?"
-              className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary font-medium"
-              disabled={submitting}
-            />
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description (optional)"
-              className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary placeholder-cp-text-secondary"
-              disabled={submitting}
-            />
-            <div className="space-y-1">
-              <label className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider block px-1">Due Date / Deadline</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-2.5 w-3.5 h-3.5 text-cp-text-secondary pointer-events-none" />
-                <input
-                  type="date"
-                  value={dueDate}
-                  min={getTodayString()}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs text-cp-text-primary font-medium"
-                  disabled={submitting}
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-2.5 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold rounded-xl text-xs transition-all flex items-center justify-center space-x-1"
-          >
-            {submitting ? (
-              <div className="w-4 h-4 border-2 border-cp-text-on-accent border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <Plus className="w-3.5 h-3.5" />
-                <span>Create Task</span>
-              </>
-            )}
-          </button>
-        </form>
-      )}
-
-      {/* PENDING TASKS SECTION */}
-      <div className="space-y-2.5">
-        <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">
-          Pending Tasks ({pendingTasks.length})
-        </h3>
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <div className="p-4 space-y-4 pb-2">
         
-        {pendingTasks.length === 0 ? (
-          <div className="text-center py-8 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            <CheckCircle2 className="w-5 h-5 mx-auto text-green-500" />
-            <p className="font-semibold text-cp-text-primary">All caught up!</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {pendingTasks.map(task => (
-              <div key={task.id} className="bg-cp-surface border border-cp-border rounded-2xl p-3 flex items-start justify-between shadow-[0_1px_2px_rgba(0,0,0,0.01)] hover:border-cp-accent/30 transition-all duration-300">
-                {/* Left check circle & details */}
-                <div className="flex items-start space-x-2.5 flex-grow pr-2 min-w-0">
-                  <button 
-                    onClick={() => handleToggleComplete(task)}
-                    className="mt-0.5 text-cp-text-secondary/60 hover:text-cp-accent transition-all shrink-0 cursor-pointer"
-                  >
-                    <Square className="w-4.5 h-4.5" />
-                  </button>
-                  <div className="space-y-0.5 truncate min-w-0 flex-grow">
-                    <h4 className="text-xs font-bold text-cp-text-primary leading-tight truncate">{task.title}</h4>
-                    {task.description && (
-                      <p className="text-[11px] text-cp-text-secondary leading-normal truncate">{task.description}</p>
-                    )}
-                    
-                    {/* Compact Date Info Boxes */}
-                    <div className="flex flex-wrap gap-1.5 mt-1 text-[9px] font-medium text-cp-text-secondary select-none">
-                      <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
-                        <span className="text-cp-text-secondary/60">Created</span>
-                        <span className="font-mono text-cp-text-primary">{formatShortDate(task.createdDate || new Date())}</span>
-                      </div>
-                      
-                      {task.dueDate && (
-                        <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
-                          <span className="text-cp-text-secondary/60">Due</span>
-                          <span className="font-mono text-cp-text-primary">{formatShortDate(task.dueDate)}</span>
-                        </div>
-                      )}
-
-                      {isOverdue(task) && (
-                        <span className="px-1.5 py-0.5 bg-red-500/5 text-red-500/70 border border-red-500/10 rounded text-[9px] uppercase font-bold tracking-wider animate-pulse">
-                          Overdue
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right controls */}
-                <div className="flex items-center space-x-1 shrink-0">
-                  <button
-                    onClick={() => handleStartEdit(task)}
-                    className="p-1.5 text-cp-text-secondary hover:text-cp-accent hover:bg-cp-accent-light rounded-lg transition-all"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="p-1.5 text-cp-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+        {/* Offline Warning Banner */}
+        {isOffline && (
+          <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-start space-x-2.5 text-xs text-amber-600 font-medium animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+            <span>Offline mode - showing last updated data</span>
           </div>
         )}
-      </div>
 
-      {/* COMPLETED TASKS SECTION */}
-      {completedTasks.length > 0 && (
-        <div className="space-y-2 pt-1">
-          <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">
-            Completed Tasks ({completedTasks.length})
-          </h3>
-          <div className="space-y-2">
-            {completedTasks.map(task => (
-              <div key={task.id} className="bg-cp-surface/60 border border-cp-border rounded-2xl p-3 flex items-start justify-between opacity-60">
-                <div className="flex items-start space-x-2.5 flex-grow pr-2 min-w-0">
-                  <button 
-                    onClick={() => handleToggleComplete(task)}
-                    className="mt-0.5 text-cp-accent transition-all shrink-0 cursor-pointer"
-                  >
-                    <CheckSquare className="w-4.5 h-4.5" />
-                  </button>
-                  <div className="space-y-0.5 truncate min-w-0 flex-grow">
-                    <h4 className="text-xs font-semibold text-cp-text-secondary line-through leading-tight truncate">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
+            <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Personal Tasks</h2>
+          </div>
+          <button
+            onClick={startCreateTask}
+            disabled={isOffline}
+            className={`w-9 h-9 bg-cp-accent text-cp-text-on-accent rounded-xl flex items-center justify-center shadow-md hover:opacity-90 active:scale-95 transition-all cursor-pointer ${isOffline ? 'opacity-40 cursor-not-allowed' : ''}`}
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Errors Alert */}
+        {error && (
+          <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20 flex items-start space-x-2.5 text-xs text-green-500 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        {/* CREATE TASK FORM ACCORDION */}
+        {showCreateForm && (
+          <form onSubmit={handleCreateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center justify-between text-cp-accent">
+              <span className="text-xs font-bold flex items-center">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Add New Task
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setShowCreateForm(false)}
+                className="text-cp-text-secondary hover:text-cp-text-primary"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <input 
+                type="text" 
+                placeholder="Task Title (e.g. Maths assignment)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
+              />
+              <textarea 
+                placeholder="Optional description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary h-16 resize-none"
+              />
+              <input 
+                type="date" 
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2 bg-cp-accent text-cp-text-on-accent font-bold text-xs rounded-xl hover:opacity-90 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Add Task</span>}
+            </button>
+          </form>
+        )}
+
+        {/* EDIT TASK FORM ACCORDION */}
+        {editingTask && (
+          <form onSubmit={handleUpdateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center justify-between text-cp-accent">
+              <span className="text-xs font-bold flex items-center">
+                <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                Edit Task Details
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setEditingTask(null)}
+                className="text-cp-text-secondary hover:text-cp-text-primary"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <input 
+                type="text" 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
+              />
+              <textarea 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary h-16 resize-none"
+              />
+              <input 
+                type="date" 
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2 bg-cp-accent text-cp-text-on-accent font-bold text-xs rounded-xl hover:opacity-90 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Update Task</span>}
+            </button>
+          </form>
+        )}
+
+        {/* LIST OF TASKS */}
+        {tasks.length === 0 ? (
+          <div className="text-center py-12 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
+            <ListTodo className="w-7 h-7 mx-auto text-cp-text-secondary/50" />
+            <p className="font-bold text-cp-text-primary">No tasks pending</p>
+            <p className="text-[10px] text-cp-text-secondary">Click the '+' button above to add a task.</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {tasks.map((task) => (
+              <div 
+                key={task.id} 
+                className={`p-3.5 bg-cp-surface border rounded-2xl flex items-center justify-between hover:border-cp-accent/20 transition-all duration-300 shadow-[0_1px_2px_rgba(0,0,0,0.01)] ${
+                  task.completed ? 'border-cp-border/50 opacity-60' : 'border-cp-border'
+                }`}
+              >
+                <div className="flex items-start space-x-3 max-w-[240px]">
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    disabled={isOffline}
+                    onChange={() => handleToggleCompleted(task)}
+                    className="w-4 h-4 rounded border-cp-border text-cp-accent focus:ring-cp-accent/30 mt-0.5 cursor-pointer disabled:opacity-40"
+                  />
+                  <div className="space-y-0.5 min-w-0" onClick={() => !task.completed && startEditTask(task)}>
+                    <h4 className={`text-xs font-bold text-cp-text-primary truncate leading-snug ${
+                      task.completed ? 'line-through text-cp-text-secondary' : 'cursor-pointer hover:text-cp-accent'
+                    }`}>
                       {task.title}
                     </h4>
                     {task.description && (
-                      <p className="text-[11px] text-cp-text-secondary/70 line-through leading-normal truncate">{task.description}</p>
+                      <p className="text-[10px] text-cp-text-secondary truncate">{task.description}</p>
                     )}
-                    
-                    {/* Compact Date Info Boxes for completed tasks */}
-                    <div className="flex flex-wrap gap-1.5 mt-1 text-[9px] font-medium text-cp-text-secondary select-none">
-                      <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
-                        <span className="text-cp-text-secondary/60">Created</span>
-                        <span className="font-mono text-cp-text-primary">{formatShortDate(task.createdDate || new Date())}</span>
-                      </div>
-                      
-                      {task.dueDate && (
-                        <div className="flex items-center space-x-1 bg-cp-accent-light px-1.5 py-0.5 rounded border border-cp-border-light">
-                          <span className="text-cp-text-secondary/60">Due</span>
-                          <span className="font-mono text-cp-text-primary">{formatShortDate(task.dueDate)}</span>
+                    <div className="flex items-center space-x-1.5 pt-1">
+                      {isOverdue(task) ? (
+                        <div className="flex items-center text-[9px] text-red-500 font-bold space-x-1">
+                          <Calendar className="w-3 h-3 shrink-0" />
+                          <span>Overdue ({formatShortDate(task.dueDate)})</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-[9px] text-cp-text-secondary font-bold space-x-1">
+                          <Calendar className="w-3 h-3 shrink-0" />
+                          <span>{formatShortDate(task.dueDate)}</span>
                         </div>
                       )}
                     </div>
@@ -505,17 +486,26 @@ const Tasks = () => {
 
                 <button
                   onClick={() => handleDeleteTask(task.id)}
-                  className="p-1.5 text-cp-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
+                  disabled={isOffline}
+                  className="p-1.5 text-cp-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all shrink-0 cursor-pointer disabled:opacity-30"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
+        {/* Dynamic PTR Toast Notification */}
+        {showUpdatedToast && (
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-cp-surface border border-cp-border text-cp-text-primary px-3 py-1.5 rounded-full shadow-lg text-[10px] font-bold z-50 animate-fadeIn uppercase tracking-wider flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            <span>Updated</span>
+          </div>
+        )}
+
+      </div>
+    </PullToRefresh>
   );
 };
 

@@ -97,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthStatusResponse getAuthStatus(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return new AuthStatusResponse(false, null, null, null, false);
+            return new AuthStatusResponse(false, null, null, null, false, null);
         }
 
         Object principal = authentication.getPrincipal();
@@ -117,16 +117,16 @@ public class AuthServiceImpl implements AuthService {
             Optional<Student> studentOpt = studentRepository.findByRollNo(username);
             if (studentOpt.isPresent()) {
                 Student student = studentOpt.get();
-                return new AuthStatusResponse(true, "STUDENT", student.getRollNo(), student.getName(), student.isMustChangePassword());
+                return new AuthStatusResponse(true, "STUDENT", student.getRollNo(), student.getName(), student.isMustChangePassword(), student.getAvatarUrl());
             }
         } else if (isAdmin) {
             Optional<Admin> adminOpt = adminRepository.findByUsername(username);
             if (adminOpt.isPresent()) {
                 Admin admin = adminOpt.get();
-                return new AuthStatusResponse(true, "ADMIN", admin.getUsername(), "Administrator", false);
+                return new AuthStatusResponse(true, "ADMIN", admin.getUsername(), "Administrator", false, null);
             }
         }
 
-        return new AuthStatusResponse(false, null, null, null, false);
+        return new AuthStatusResponse(false, null, null, null, false, null);
     }
 }

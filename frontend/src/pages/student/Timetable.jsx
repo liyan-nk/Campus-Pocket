@@ -3,28 +3,34 @@ import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
 import { Calendar, Clock, User, MapPin, AlertCircle } from 'lucide-react';
 import { formatTime12Hour } from '../../utils/dateUtils';
-import { getCachedData, setCachedData } from '../../utils/dataCache';
+import { getCachedData, setCachedData, isCacheValid } from '../../utils/dataCache';
+import PullToRefresh from '../../components/PullToRefresh';
 
 const Timetable = () => {
   const { user } = useAuth();
   
-  const [timetable, setTimetable] = useState(() => getCachedData('timetable') || []);
-  const [loading, setLoading] = useState(!getCachedData('timetable'));
+  const [timetable, setTimetable] = useState(() => getCachedData('timetable', user?.username) || []);
+  const [loading, setLoading] = useState(() => !getCachedData('timetable', user?.username));
   const [error, setError] = useState('');
   
   // Day filter states
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  
-  // Set current day of the week as default active tab
-  const getCurrentDay = () => {
-    const todayNum = new Date().getDay(); // 0 is Sunday, 1 is Monday...
-    const map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return map[todayNum];
+  const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const getCurrentDayString = () => {
+    const dayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
+    if (dayIndex === 0) return 'MONDAY'; // fallback Sunday to Monday
+    return daysOfWeek[dayIndex - 1];
   };
+  const [activeDay, setActiveDay] = useState(getCurrentDayString());
+  
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [showUpdatedToast, setShowUpdatedToast] = useState(false);
 
-  const [activeDay, setActiveDay] = useState(getCurrentDay());
-
-  const fetchTimetable = async () => {
+  const fetchTimetable = async (force = false) => {
+    const username = user?.username;
+    if (!force && isCacheValid('timetable', username)) {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/timetable`, {
         credentials: 'include'
@@ -32,16 +38,15 @@ const Timetable = () => {
       if (response.ok) {
         const data = await response.json();
         setTimetable(data);
-        setCachedData('timetable', data);
+        setCachedData('timetable', username, data);
+        setError('');
       } else {
         const errData = await response.json().catch(() => ({}));
-        const msg = errData.message || `Failed to load timetable (Server returned ${response.status}).`;
+        const msg = errData.message || `Failed to load timetable.`;
         setError(msg);
-        console.error('Timetable fetch failed:', response.status, errData);
       }
     } catch (err) {
-      setError(`Connection error. Failed to load timetable (${err.message}).`);
-      console.error('Timetable fetch connection error:', err);
+      setError('Connection error. Failed to load timetable.');
     } finally {
       setLoading(false);
     }
@@ -49,40 +54,28 @@ const Timetable = () => {
 
   useEffect(() => {
     fetchTimetable();
-  }, []);
 
-  // Filter timetable for the active tab day
-  const filteredSlots = timetable.filter(
-    (slot) => slot.day.toLowerCase() === activeDay.toLowerCase()
-  );
+    const goOnline = () => {
+      setIsOffline(false);
+      fetchTimetable(true);
+    };
+    const goOffline = () => setIsOffline(true);
 
-  // Format academic profile fields
-  const getFormattedDept = (val) => {
-    if (!val) return '';
-    let d = val.trim().toUpperCase();
-    if (d === 'AI&DS' || d === 'AIDS' || d === 'AI AND DS' || d === 'AI & DS') return 'AI & DS';
-    return d;
-  };
-  const getFormattedSem = (val) => {
-    if (!val) return '';
-    let s = val.replace(/semester/gi, '').replaceAll(/\s+/g, '').toUpperCase();
-    if (/^S+\d+$/.test(s)) {
-      return 'S' + s.replace(/^S+/, '');
-    } else if (/^\d+$/.test(s)) {
-      return 'S' + s;
-    }
-    return s;
-  };
-  const getFormattedBatch = (val) => {
-    if (!val) return '';
-    let b = val.replace(/batch/gi, '').replaceAll(/\s+/g, '').toUpperCase();
-    if (b.length > 1 && b.startsWith('B')) {
-      return b.substring(1);
-    }
-    return b;
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, [user]);
+
+  const handlePullRefresh = async () => {
+    await fetchTimetable(true);
+    setShowUpdatedToast(true);
+    setTimeout(() => setShowUpdatedToast(false), 2000);
   };
 
-  // Bulletproof Subject and Faculty Parsers
   const getSubjectName = (slot) => {
     if (slot.subjectName) return slot.subjectName;
     if (slot.subject && slot.subject.includes('(')) {
@@ -116,105 +109,121 @@ const Timetable = () => {
     );
   }
 
-
+  // Filter slots for current active day selection
+  const filteredSlots = timetable.filter(
+    (slot) => slot.dayOfWeek === activeDay
+  );
 
   return (
-    <div className="p-4 space-y-4 pb-2">
-      
-      {/* Header Title */}
-      <div>
-        <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Class Schedule</p>
-        <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Timetable</h2>
-      </div>
-
-      {/* Profile summary banner */}
-      <div className="bg-cp-surface border border-cp-border p-2.5 px-3.5 rounded-2xl flex items-center justify-between text-xs text-cp-text-secondary font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-        <span>Academic Profile</span>
-        <span className="font-mono text-cp-text-primary bg-cp-accent-light px-2 py-0.5 rounded-lg border border-cp-border-light text-[10px]">
-          {getFormattedDept(user?.department)} / {getFormattedSem(user?.semester)} / {getFormattedBatch(user?.batch)}
-        </span>
-      </div>
-
-      {/* Error alert logger */}
-      {error && (
-        <div className="p-3.5 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Day Swiper (Horizontal navigation) */}
-      <div className="overflow-x-auto -mx-4 px-4 py-1 scrollbar-none flex space-x-2">
-        {daysOfWeek.map((day) => {
-          const isToday = getCurrentDay().toLowerCase() === day.toLowerCase();
-          const isActive = activeDay.toLowerCase() === day.toLowerCase();
-          return (
-            <button
-              key={day}
-              onClick={() => setActiveDay(day)}
-              className={`px-3.5 py-2 rounded-xl font-display text-xs font-bold shrink-0 transition-all ${
-                isActive
-                  ? 'bg-cp-accent text-cp-text-on-accent shadow-sm'
-                  : 'bg-cp-surface text-cp-text-secondary border border-cp-border hover:border-cp-accent/30 shadow-[0_1px_2px_rgba(0,0,0,0.01)]'
-              }`}
-            >
-              {day.substring(0, 3)}
-              {isToday && <span className="ml-1 text-[8px] uppercase px-1 bg-cp-accent-light text-cp-text-primary rounded-md">Today</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Class Slots Cards List */}
-      <div className="space-y-3">
-        {filteredSlots.length === 0 ? (
-          <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            <Calendar className="w-6 h-6 mx-auto text-cp-text-secondary/55" />
-            <p>No classes scheduled for {activeDay}.</p>
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <div className="p-4 space-y-4 pb-2">
+        
+        {/* Offline Warning Banner */}
+        {isOffline && (
+          <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-start space-x-2.5 text-xs text-amber-600 font-medium animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+            <span>Offline mode - showing last updated data</span>
           </div>
-        ) : (
-          // Sort slots chronologically by start time
-          filteredSlots
-            .sort((a, b) => a.startTime.localeCompare(b.startTime))
-            .map((slot) => (
-              <div 
-                key={slot.id} 
-                className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
-              >
-                {/* Header section */}
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 min-w-0 pr-2 flex-grow">
-                    <h4 className="font-display font-extrabold text-sm text-cp-text-primary tracking-tight leading-tight">
-                      {getSubjectName(slot)}
-                    </h4>
-                    <p className="text-[10px] font-mono text-cp-text-secondary font-bold tracking-wider uppercase">
-                      {getSubjectCode(slot)}
-                    </p>
-                  </div>
-                  <div className="px-2 py-0.5 bg-cp-accent-light text-cp-text-primary font-display font-extrabold text-[10px] rounded-lg border border-cp-border-light shrink-0">
-                    {slot.room}
-                  </div>
-                </div>
-
-                {/* Time slots and class room details footer */}
-                <div className="flex items-center justify-between text-[11px] text-cp-text-secondary border-t border-cp-border-light pt-2.5">
-                  <div className="flex items-center">
-                    <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
-                    <span className="font-mono font-medium text-cp-text-primary">
-                      {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <User className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60 shrink-0" />
-                    <span className="font-semibold text-cp-text-primary">{getFacultyName(slot)}</span>
-                  </div>
-                </div>
-              </div>
-            ))
         )}
-      </div>
 
-    </div>
+        {/* Header */}
+        <div>
+          <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
+          <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Class Timetable</h2>
+        </div>
+
+        {/* Errors Alert */}
+        {error && (
+          <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 flex items-start space-x-2.5 text-xs text-red-500">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Day Select Scroller */}
+        <div className="flex space-x-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 select-none">
+          {daysOfWeek.map((day) => {
+            const isToday = getCurrentDayString() === day;
+            const isActive = activeDay === day;
+
+            return (
+              <button
+                key={day}
+                onClick={() => setActiveDay(day)}
+                className={`px-3.5 py-2 rounded-xl text-[9px] font-bold tracking-wider uppercase transition-all shrink-0 flex items-center border ${
+                  isActive
+                    ? 'bg-cp-accent text-cp-text-on-accent border-cp-accent shadow-sm'
+                    : 'bg-cp-surface text-cp-text-secondary border-cp-border hover:text-cp-text-primary'
+                }`}
+              >
+                {day.substring(0, 3)}
+                {isToday && <span className="ml-1 text-[8px] uppercase px-1 bg-cp-accent-light text-cp-text-primary rounded-md">Today</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Class Slots Cards List */}
+        <div className="space-y-3">
+          {filteredSlots.length === 0 ? (
+            <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <Calendar className="w-6 h-6 mx-auto text-cp-text-secondary/55" />
+              <p>No classes scheduled for {activeDay}.</p>
+            </div>
+          ) : (
+            // Sort slots chronologically by start time
+            filteredSlots
+              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+              .map((slot) => (
+                <div 
+                  key={slot.id} 
+                  className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                >
+                  {/* Header section */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 min-w-0 pr-2 flex-grow">
+                      <h4 className="font-display font-extrabold text-sm text-cp-text-primary tracking-tight leading-tight">
+                        {getSubjectName(slot)}
+                      </h4>
+                      <p className="text-[10px] font-mono text-cp-text-secondary font-bold tracking-wider uppercase">
+                        {getSubjectCode(slot)}
+                      </p>
+                    </div>
+                    {slot.room && (
+                      <div className="px-2 py-1 bg-cp-accent-light rounded-xl text-cp-accent text-[10px] font-extrabold border border-cp-border shrink-0">
+                        {slot.room}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Faculty & Hours Info */}
+                  <div className="flex items-center justify-between text-[10px] text-cp-text-secondary pt-2 border-t border-cp-border/50">
+                    <div className="flex items-center">
+                      <Clock className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/80 shrink-0" />
+                      <span className="font-mono">
+                        {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <User className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60 shrink-0" />
+                      <span className="font-semibold text-cp-text-primary">{getFacultyName(slot)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+
+        {/* Dynamic PTR Toast Notification */}
+        {showUpdatedToast && (
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-cp-surface border border-cp-border text-cp-text-primary px-3 py-1.5 rounded-full shadow-lg text-[10px] font-bold z-50 animate-fadeIn uppercase tracking-wider flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            <span>Updated</span>
+          </div>
+        )}
+
+      </div>
+    </PullToRefresh>
   );
 };
 

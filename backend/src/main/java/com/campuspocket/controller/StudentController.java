@@ -31,17 +31,20 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentProfile(rollNo));
     }
 
-    @GetMapping("/avatar")
-    public ResponseEntity<StudentAvatarDTO> getAvatar(Authentication authentication) {
+    @PostMapping("/avatar/upload")
+    public ResponseEntity<?> uploadAvatar(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file, 
+            Authentication authentication) {
         String rollNo = authentication.getName();
-        return ResponseEntity.ok(studentService.getStudentAvatar(rollNo));
+        String avatarUrl = studentService.uploadAvatar(rollNo, file);
+        return ResponseEntity.ok(Map.of("avatarUrl", avatarUrl));
     }
 
-    @PutMapping("/avatar")
-    public ResponseEntity<?> updateAvatar(@Valid @RequestBody StudentAvatarDTO dto, Authentication authentication) {
+    @DeleteMapping("/avatar")
+    public ResponseEntity<?> deleteAvatar(Authentication authentication) {
         String rollNo = authentication.getName();
-        studentService.updateStudentAvatar(rollNo, dto);
-        return ResponseEntity.ok(Map.of("message", "Avatar settings updated successfully."));
+        studentService.deleteAvatar(rollNo);
+        return ResponseEntity.ok(Map.of("message", "Avatar removed successfully."));
     }
 
     @GetMapping("/dashboard")
