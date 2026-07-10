@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import API_BASE_URL from '../config/api';
+import { clearCache } from '../utils/dataCache';
 
 const AuthContext = createContext(null);
 
@@ -140,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       safeRemoveItem('cp_user_data');
+      clearCache();
     }
   };
 
@@ -168,16 +170,26 @@ export const AuthProvider = ({ children }) => {
   const [avatarInitials, setAvatarInitials] = useState('');
   const [avatarImage, setAvatarImage] = useState('');
 
-  // Sync avatar data from localStorage on user change
+  const fetchAvatar = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/student/avatar`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAvatarMode(data.avatarMode?.toLowerCase() || 'initials');
+        setAvatarInitials(data.avatarInitials || '');
+        setAvatarImage(data.avatarImage || '');
+      }
+    } catch (e) {
+      console.error('Failed to load student avatar from database:', e);
+    }
+  };
+
+  // Sync avatar data from backend on user change
   useEffect(() => {
     if (user && user.role !== 'ADMIN') {
-      const mode = safeGetItem(`cp_avatar_${user.username}_mode`) || 'initials';
-      const initials = safeGetItem(`cp_avatar_${user.username}_initials`) || user.name?.charAt(0) || '';
-      const img = safeGetItem(`cp_avatar_${user.username}_image`) || '';
-      
-      setAvatarMode(mode);
-      setAvatarInitials(initials);
-      setAvatarImage(img);
+      fetchAvatar();
     } else {
       setAvatarMode('initials');
       setAvatarInitials('');
@@ -185,16 +197,31 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Future-proof avatar update logic (can be redirected to backend later)
+  // Synchronize avatar updates with database
   const updateAvatar = async (mode, initials, imageBase64) => {
     if (!user) return;
-    safeSetItem(`cp_avatar_${user.username}_mode`, mode);
-    safeSetItem(`cp_avatar_${user.username}_initials`, initials);
-    safeSetItem(`cp_avatar_${user.username}_image`, imageBase64);
     
+    // Optimistic UI updates
     setAvatarMode(mode);
     setAvatarInitials(initials);
     setAvatarImage(imageBase64);
+
+    if (user.role !== 'ADMIN') {
+      try {
+        await fetch(`${API_BASE_URL}/api/student/avatar`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            avatarMode: mode.toUpperCase(),
+            avatarInitials: initials,
+            avatarImage: imageBase64
+          })
+        });
+      } catch (e) {
+        console.error('Failed to sync avatar update with database:', e);
+      }
+    }
   };
 
   return (

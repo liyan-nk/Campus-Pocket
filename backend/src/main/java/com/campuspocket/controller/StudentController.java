@@ -31,6 +31,19 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentProfile(rollNo));
     }
 
+    @GetMapping("/avatar")
+    public ResponseEntity<StudentAvatarDTO> getAvatar(Authentication authentication) {
+        String rollNo = authentication.getName();
+        return ResponseEntity.ok(studentService.getStudentAvatar(rollNo));
+    }
+
+    @PutMapping("/avatar")
+    public ResponseEntity<?> updateAvatar(@Valid @RequestBody StudentAvatarDTO dto, Authentication authentication) {
+        String rollNo = authentication.getName();
+        studentService.updateStudentAvatar(rollNo, dto);
+        return ResponseEntity.ok(Map.of("message", "Avatar settings updated successfully."));
+    }
+
     @GetMapping("/dashboard")
     public ResponseEntity<StudentDashboardResponse> getDashboard(
             @RequestParam(value = "date", required = false) String dateStr,

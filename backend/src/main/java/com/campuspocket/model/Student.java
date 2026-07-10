@@ -43,6 +43,15 @@ public class Student {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "avatar_mode")
+    private String avatarMode = "INITIALS";
+
+    @Column(name = "avatar_initials")
+    private String avatarInitials;
+
+    @Column(name = "avatar_image", columnDefinition = "TEXT")
+    private String avatarImage;
+
     public Student() {
         this.enabled = true;
     }
@@ -60,9 +69,34 @@ public class Student {
         this.activated = activated;
         this.mustChangePassword = mustChangePassword;
         this.enabled = true;
+        this.avatarMode = "INITIALS";
     }
 
     // Getters and Setters
+    public String getAvatarMode() {
+        return avatarMode;
+    }
+
+    public void setAvatarMode(String avatarMode) {
+        this.avatarMode = avatarMode;
+    }
+
+    public String getAvatarInitials() {
+        return avatarInitials;
+    }
+
+    public void setAvatarInitials(String avatarInitials) {
+        this.avatarInitials = avatarInitials;
+    }
+
+    public String getAvatarImage() {
+        return avatarImage;
+    }
+
+    public void setAvatarImage(String avatarImage) {
+        this.avatarImage = avatarImage;
+    }
+
     public String getRollNo() {
         return rollNo;
     }

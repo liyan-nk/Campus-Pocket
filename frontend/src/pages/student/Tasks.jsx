@@ -5,10 +5,11 @@ import {
   Calendar, AlertCircle, CheckCircle2, ListTodo, X 
 } from 'lucide-react';
 import { parseLocalDate } from '../../utils/dateUtils';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState(() => getCachedData('tasks') || []);
+  const [loading, setLoading] = useState(!getCachedData('tasks'));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -33,6 +34,7 @@ const Tasks = () => {
       if (response.ok) {
         const data = await response.json();
         setTasks(data);
+        setCachedData('tasks', data);
       } else {
         setError('Failed to fetch tasks.');
       }
@@ -263,15 +265,7 @@ const Tasks = () => {
       )}
 
       {/* CREATE / EDIT TASK ACCORDION */}
-      {loading ? (
-        <div className="space-y-4 py-2">
-          <div className="h-12 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
-          <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
-          <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
-        </div>
-      ) : (
-        <>
-          {editingTask ? (
+      {editingTask ? (
         /* EDIT TASK FORM */
         <form onSubmit={handleUpdateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
           <div className="flex items-center justify-between text-cp-accent">
@@ -519,8 +513,6 @@ const Tasks = () => {
             ))}
           </div>
         </div>
-      )}
-      </>
       )}
 
     </div>

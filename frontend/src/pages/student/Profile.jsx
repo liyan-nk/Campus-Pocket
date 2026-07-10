@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import { 
   User, Phone, GraduationCap, Layers, KeyRound, 
   LogOut, ShieldAlert, CheckCircle, Sun, Moon,
@@ -17,8 +18,8 @@ const Profile = () => {
     updateAvatar 
   } = useAuth();
   
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(() => getCachedData('profile'));
+  const [loading, setLoading] = useState(!getCachedData('profile'));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -66,6 +67,7 @@ const Profile = () => {
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
+        setCachedData('profile', data);
         setCustomInitials(avatarInitials || data.name.charAt(0));
       } else {
         const errData = await response.json().catch(() => ({}));
@@ -201,6 +203,14 @@ const Profile = () => {
     return d;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
+      </div>
+    );
+  }
+
 
 
   return (
@@ -212,17 +222,7 @@ const Profile = () => {
         <p className="mt-0.5 text-cp-text-secondary text-[9px] font-bold uppercase tracking-wider">Campus Pocket</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-4 py-4">
-          <div className="w-24 h-24 bg-cp-surface rounded-full mx-auto animate-pulse border border-cp-border"></div>
-          <div className="space-y-3">
-            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
-            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
-            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
-          </div>
-        </div>
-      ) : (
-        <>
+
 
       {/* Status alerts */}
       {error && (
@@ -488,8 +488,6 @@ const Profile = () => {
           Academic data is managed centrally by administrators.
         </span>
       </div>
-      </>
-      )}
     </div>
   );
 };

@@ -5,13 +5,14 @@ import API_BASE_URL from '../../config/api';
 import { 
   AlertCircle, CheckCircle2, BarChart2, Clock, ChevronRight 
 } from 'lucide-react';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 
 const Attendance = () => {
   const { user } = useAuth();
   
   // Summary states
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(() => getCachedData('attendanceSummary'));
+  const [loading, setLoading] = useState(!getCachedData('attendanceSummary'));
   const [error, setError] = useState('');
 
   const fetchAttendanceSummary = async () => {
@@ -22,6 +23,7 @@ const Attendance = () => {
       if (response.ok) {
         const data = await response.json();
         setSummary(data);
+        setCachedData('attendanceSummary', data);
       } else {
         const errData = await response.json().catch(() => ({}));
         const msg = errData.message || `Failed to load attendance summary (Server returned ${response.status}).`;
@@ -39,6 +41,14 @@ const Attendance = () => {
   useEffect(() => {
     fetchAttendanceSummary();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
+      </div>
+    );
+  }
 
 
 
@@ -67,18 +77,7 @@ const Attendance = () => {
       )}
 
       {/* ATTENDANCE HEALTH SUMMARY */}
-      {loading ? (
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
-            <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
-          </div>
-          <div className="space-y-2">
-            <div className="h-3 w-32 bg-cp-surface border border-cp-border rounded animate-pulse"></div>
-            <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
-          </div>
-        </div>
-      ) : !hasAttendance ? (
+      {!hasAttendance ? (
         <div className="text-center py-10 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
           <BarChart2 className="w-8 h-8 mx-auto text-cp-text-secondary/50" />
           <p className="font-semibold text-cp-text-primary">No attendance marked yet</p>
