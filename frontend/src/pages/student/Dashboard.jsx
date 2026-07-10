@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import API_BASE_URL from '../../config/api';
 import { 
   Sparkles, Calendar, BookOpen, Clock, MapPin, 
-  Check, X, ChevronRight, AlertCircle, RefreshCw 
+  Check, X, ChevronRight, AlertCircle, RefreshCw, User 
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -13,10 +13,25 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const fetchDashboardData = async () => {
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const fetchDashboardData = async (targetDate) => {
+    const dateToUse = (targetDate instanceof Date) ? targetDate : new Date();
     try {
-      const response = await fetch(`${API_BASE_URL}/api/student/dashboard`, {
+      const dateStr = getLocalDateString(dateToUse);
+      const hours = String(dateToUse.getHours()).padStart(2, '0');
+      const mins = String(dateToUse.getMinutes()).padStart(2, '0');
+      const secs = String(dateToUse.getSeconds()).padStart(2, '0');
+      const timeStr = `${hours}:${mins}:${secs}`;
+
+      const response = await fetch(`${API_BASE_URL}/api/student/dashboard?date=${dateStr}&time=${timeStr}`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -33,7 +48,40 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(new Date());
+
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      setCurrentDate(prevDate => {
+        if (getLocalDateString(prevDate) !== getLocalDateString(now)) {
+          fetchDashboardData(now);
+        }
+        return now;
+      });
+    }, 60000);
+
+    const handleActiveState = () => {
+      if (document.visibilityState === 'visible') {
+        const now = new Date();
+        setCurrentDate(prevDate => {
+          if (getLocalDateString(prevDate) !== getLocalDateString(now)) {
+            fetchDashboardData(now);
+          } else {
+            fetchDashboardData(now);
+          }
+          return now;
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleActiveState);
+    window.addEventListener('focus', handleActiveState);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleActiveState);
+      window.removeEventListener('focus', handleActiveState);
+    };
   }, []);
 
   const handleMarkAttendance = async (timetableId, status) => {
@@ -63,7 +111,7 @@ const Dashboard = () => {
         credentials: 'include',
         body: JSON.stringify({
           timetableId,
-          date: new Date().toISOString().split('T')[0], // yyyy-MM-dd (local today date)
+          date: getLocalDateString(currentDate), // yyyy-MM-dd (local today date based on device local time)
           status
         })
       });
@@ -90,11 +138,11 @@ const Dashboard = () => {
     });
   };
 
-  // Greeting helper based on time
+  // Greeting helper based on time (05:00 - 11:59 Morning, 12:00 - 16:59 Afternoon, 17:00 - 04:59 Evening)
   const getGreeting = () => {
-    const hours = new Date().getHours();
-    if (hours < 12) return 'Good Morning';
-    if (hours < 17) return 'Good Afternoon';
+    const hours = currentDate.getHours();
+    if (hours >= 5 && hours < 12) return 'Good Morning';
+    if (hours >= 12 && hours < 17) return 'Good Afternoon';
     return 'Good Evening';
   };
 
@@ -194,7 +242,7 @@ const Dashboard = () => {
           <Calendar className="w-4.5 h-4.5 text-cp-accent shrink-0" />
           <div className="text-xs min-w-0">
             <p className="font-bold text-cp-text-primary truncate">Schedule</p>
-            <p className="text-cp-text-secondary font-medium text-[9px] leading-tight mt-0.5 truncate">{formatDate(data?.date)}</p>
+            <p className="text-cp-text-secondary font-medium text-[9px] leading-tight mt-0.5 truncate">{formatDate(currentDate)}</p>
           </div>
         </div>
 

@@ -57,8 +57,9 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
     @Override
     @Transactional
     public void markAttendance(String rollNo, AttendanceMarkRequest request) {
-        // Rule: Only today's attendance can be marked or updated
-        if (!request.getDate().equals(LocalDate.now())) {
+        // Rule: Only today's attendance can be marked or updated (using trusted server time in Asia/Kolkata)
+        LocalDate serverToday = LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        if (!request.getDate().equals(serverToday)) {
             throw new IllegalArgumentException("You can only mark or update attendance for the current day.");
         }
 
@@ -151,11 +152,10 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
     }
 
     @Override
-    public StudentDashboardResponse getStudentDashboard(String rollNo) {
+    public StudentDashboardResponse getStudentDashboard(String rollNo, LocalDate todayDate, LocalTime nowTime) {
         Student student = studentRepository.findByRollNo(rollNo)
             .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
-        LocalDate todayDate = LocalDate.now();
         String todayDayString = getCapitalizedDay(todayDate);
 
         // Fetch student's timetable entries for today (Normalized comparison)
@@ -186,7 +186,6 @@ public class StudentTimetableAttendanceServiceImpl implements StudentTimetableAt
             .collect(Collectors.toList());
 
         // Calculate next class
-        LocalTime nowTime = LocalTime.now();
         TodayClassStatus nextClass = todayClasses.stream()
             .filter(c -> c.getTimetable().getStartTime().isAfter(nowTime))
             .findFirst()

@@ -4,7 +4,14 @@ import API_BASE_URL from '../config/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // { authenticated, role, username, name, mustChangePassword }
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('cp_user_data');
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   // Check auth status on load
@@ -17,17 +24,29 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         if (data.authenticated) {
           setUser(data);
+          localStorage.setItem('cp_user_data', JSON.stringify(data));
         } else {
           setUser(null);
+          localStorage.removeItem('cp_user_data');
         }
+        setLoading(false);
       } else {
-        setUser(null);
+        if (response.status === 401) {
+          setUser(null);
+          localStorage.removeItem('cp_user_data');
+          setLoading(false);
+        } else {
+          // Keep current state on other temporary errors and retry
+          console.warn(`Temporary backend error status ${response.status}. Retrying auth check...`);
+          setLoading(false);
+          setTimeout(checkAuthStatus, 5000);
+        }
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
-      setUser(null);
-    } finally {
+      // Keep current state on connection/network error and retry
       setLoading(false);
+      setTimeout(checkAuthStatus, 5000);
     }
   };
 
@@ -48,6 +67,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Login failed');
     }
     setUser(data);
+    localStorage.setItem('cp_user_data', JSON.stringify(data));
     return data;
   };
 
@@ -64,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Admin login failed');
     }
     setUser(data);
+    localStorage.setItem('cp_user_data', JSON.stringify(data));
     return data;
   };
 
@@ -92,6 +113,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', e);
     } finally {
       setUser(null);
+      localStorage.removeItem('cp_user_data');
     }
   };
 
@@ -109,7 +131,9 @@ export const AuthProvider = ({ children }) => {
     }
     // Update local user state in case mustChangePassword was cleared
     if (user) {
-      setUser({ ...user, mustChangePassword: false });
+      const updatedUser = { ...user, mustChangePassword: false };
+      setUser(updatedUser);
+      localStorage.setItem('cp_user_data', JSON.stringify(updatedUser));
     }
     return data;
   };

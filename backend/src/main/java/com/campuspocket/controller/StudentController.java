@@ -32,9 +32,18 @@ public class StudentController {
     }
 
     @GetMapping("/dashboard")
-    public ResponseEntity<StudentDashboardResponse> getDashboard(Authentication authentication) {
+    public ResponseEntity<StudentDashboardResponse> getDashboard(
+            @RequestParam(value = "date", required = false) String dateStr,
+            @RequestParam(value = "time", required = false) String timeStr,
+            Authentication authentication) {
         String rollNo = authentication.getName();
-        return ResponseEntity.ok(studentTimetableAttendanceService.getStudentDashboard(rollNo));
+        java.time.LocalDate localDate = (dateStr != null && !dateStr.isBlank()) 
+            ? java.time.LocalDate.parse(dateStr) 
+            : java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        java.time.LocalTime localTime = (timeStr != null && !timeStr.isBlank())
+            ? java.time.LocalTime.parse(timeStr)
+            : java.time.LocalTime.now(java.time.ZoneId.of("Asia/Kolkata"));
+        return ResponseEntity.ok(studentTimetableAttendanceService.getStudentDashboard(rollNo, localDate, localTime));
     }
 
     @GetMapping("/timetable")
