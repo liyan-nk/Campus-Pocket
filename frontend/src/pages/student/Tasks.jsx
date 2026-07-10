@@ -237,13 +237,7 @@ const Tasks = () => {
     return due < today;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-4 space-y-4 pb-2">
@@ -269,7 +263,15 @@ const Tasks = () => {
       )}
 
       {/* CREATE / EDIT TASK ACCORDION */}
-      {editingTask ? (
+      {loading ? (
+        <div className="space-y-4 py-2">
+          <div className="h-12 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+          <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+          <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+        </div>
+      ) : (
+        <>
+          {editingTask ? (
         /* EDIT TASK FORM */
         <form onSubmit={handleUpdateTask} className="p-4 bg-cp-surface border border-cp-border rounded-3xl space-y-3 animate-fadeIn shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
           <div className="flex items-center justify-between text-cp-accent">
@@ -517,6 +519,8 @@ const Tasks = () => {
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
 
     </div>

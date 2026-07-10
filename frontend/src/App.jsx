@@ -14,6 +14,7 @@ import Profile from './pages/student/Profile';
 import Tasks from './pages/student/Tasks';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import NotFound from './pages/NotFound';
 import './App.css';
 
 // Root page redirect helper based on authentication status
@@ -106,8 +107,8 @@ function App() {
             }
           />
 
-          {/* Catch-all Redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+           {/* Catch-all 404 page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       </AuthProvider>

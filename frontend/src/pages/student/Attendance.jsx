@@ -40,13 +40,7 @@ const Attendance = () => {
     fetchAttendanceSummary();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
-      </div>
-    );
-  }
+
 
   // Calculate Health Summary parameters
   const stats = summary?.stats || [];
@@ -73,7 +67,18 @@ const Attendance = () => {
       )}
 
       {/* ATTENDANCE HEALTH SUMMARY */}
-      {!hasAttendance ? (
+      {loading ? (
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+            <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-32 bg-cp-surface border border-cp-border rounded animate-pulse"></div>
+            <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+          </div>
+        </div>
+      ) : !hasAttendance ? (
         <div className="text-center py-10 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
           <BarChart2 className="w-8 h-8 mx-auto text-cp-text-secondary/50" />
           <p className="font-semibold text-cp-text-primary">No attendance marked yet</p>

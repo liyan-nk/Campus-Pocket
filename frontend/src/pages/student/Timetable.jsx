@@ -106,13 +106,7 @@ const Timetable = () => {
     return slot.faculty;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-4 space-y-4 pb-2">
@@ -163,7 +157,12 @@ const Timetable = () => {
 
       {/* Class Slots Cards List */}
       <div className="space-y-3">
-        {filteredSlots.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+            <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+          </div>
+        ) : filteredSlots.length === 0 ? (
           <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
             <Calendar className="w-6 h-6 mx-auto text-cp-text-secondary/55" />
             <p>No classes scheduled for {activeDay}.</p>

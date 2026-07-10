@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../../config/api';
 import { 
-  ArrowLeft, Clock, ChevronLeft, ChevronRight, AlertCircle 
+  ArrowLeft, Clock, ChevronLeft, ChevronRight, AlertCircle, Calendar 
 } from 'lucide-react';
 import { parseLocalDate, formatTime12Hour } from '../../utils/dateUtils';
 
 const AttendanceHistory = () => {
   const { user } = useAuth();
+  const dateInputRef = useRef(null);
   
   // Date-wise navigation states
   const [dates, setDates] = useState([]);
   const [datesLoading, setDatesLoading] = useState(true);
   const [datesError, setDatesError] = useState('');
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
+  const [selectedDateOverride, setSelectedDateOverride] = useState('');
 
   // Single-day history states
   const [history, setHistory] = useState([]);
@@ -72,32 +74,56 @@ const AttendanceHistory = () => {
     fetchAttendanceDates();
   }, []);
 
+  // Compute selected date string
+  const hasDates = dates.length > 0;
+  const selectedDateStr = selectedDateOverride || (hasDates && selectedDateIndex !== -1 ? dates[selectedDateIndex] : '');
+
+  // Refetch history when the selected date string changes
   useEffect(() => {
-    if (dates.length > 0 && selectedDateIndex >= 0 && selectedDateIndex < dates.length) {
-      fetchAttendanceHistoryForDate(dates[selectedDateIndex]);
+    if (selectedDateStr) {
+      fetchAttendanceHistoryForDate(selectedDateStr);
     }
-  }, [dates, selectedDateIndex]);
+  }, [selectedDateStr]);
 
   const handleNavigateDate = (direction) => {
+    setSelectedDateOverride('');
     setSelectedDateIndex(prev => {
-      const nextIndex = prev + direction;
+      const currentIdx = prev === -1 ? 0 : prev;
+      const nextIndex = currentIdx + direction;
       if (nextIndex >= 0 && nextIndex < dates.length) {
         return nextIndex;
       }
-      return prev;
+      return currentIdx;
     });
+  };
+
+  const triggerDatePicker = () => {
+    if (dateInputRef.current) {
+      if (typeof dateInputRef.current.showPicker === 'function') {
+        try {
+          dateInputRef.current.showPicker();
+        } catch (e) {
+          dateInputRef.current.click();
+        }
+      } else {
+        dateInputRef.current.click();
+      }
+    }
   };
 
   // Helper to format date string: e.g. "Friday, July 10, 2026"
   const formatHistoryDate = (dateString) => {
     if (!dateString) return '';
-    const date = parseLocalDate(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    try {
+      const date = parseLocalDate(dateString);
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   if (datesLoading) {
@@ -108,14 +134,15 @@ const AttendanceHistory = () => {
     );
   }
 
-  const hasDates = dates.length > 0;
-  const selectedDateStr = hasDates ? dates[selectedDateIndex] : '';
-
   // Filter history entries based on select tab
   const filteredHistory = history.filter(item => {
     if (filter === 'ALL') return true;
     return item.status === filter;
   });
+
+  // Navigation button states
+  const canGoOlder = selectedDateIndex !== -1 && selectedDateIndex < dates.length - 1;
+  const canGoNewer = selectedDateIndex !== -1 && selectedDateIndex > 0;
 
   return (
     <div className="p-4 space-y-4 pb-2">
@@ -146,7 +173,7 @@ const AttendanceHistory = () => {
       )}
 
       {/* Main Single Day History Container */}
-      {!hasDates ? (
+      {!hasDates && !selectedDateOverride ? (
         /* Entirely Empty State (no dates marked at all) */
         <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
           <Clock className="w-8 h-8 mx-auto text-cp-text-secondary/40" />
@@ -156,28 +183,55 @@ const AttendanceHistory = () => {
       ) : (
         <div className="space-y-4">
           
-          {/* Day Navigation Bar */}
-          <div className="flex items-center justify-between bg-cp-surface border border-cp-border rounded-2xl p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            {/* older date is further down in the dates list (larger index) */}
+          {/* Day Navigation Bar with native date picker overlay */}
+          <div className="flex items-center justify-between bg-cp-surface border border-cp-border rounded-2xl p-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)] relative">
+            
+            {/* Native Date Input Overlay */}
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={selectedDateStr || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val) {
+                  const idx = dates.indexOf(val);
+                  if (idx !== -1) {
+                    setSelectedDateOverride('');
+                    setSelectedDateIndex(idx);
+                  } else {
+                    setSelectedDateOverride(val);
+                    setSelectedDateIndex(-1);
+                  }
+                }
+              }}
+              className="absolute opacity-0 w-0 h-0 pointer-events-none"
+            />
+
+            {/* Older date selector (goes left, increments index) */}
             <button
               onClick={() => handleNavigateDate(1)}
-              disabled={selectedDateIndex >= dates.length - 1}
+              disabled={!canGoOlder}
               title="Older date"
-              className="p-1.5 hover:bg-cp-accent-light text-cp-text-secondary hover:text-cp-accent disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border border-cp-border shrink-0"
+              className="p-1.5 hover:bg-cp-accent-light text-cp-text-secondary hover:text-cp-accent disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border border-cp-border shrink-0 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             
-            <span className="font-display font-extrabold text-[11px] text-cp-text-primary text-center px-2 truncate">
-              {formatHistoryDate(selectedDateStr)}
-            </span>
+            {/* Center interactive date picker trigger */}
+            <button
+              onClick={triggerDatePicker}
+              className="flex items-center space-x-1.5 px-3 py-1.5 hover:bg-cp-accent-light text-cp-text-primary hover:text-cp-accent rounded-xl transition-all border border-cp-border font-display font-extrabold text-[11px] max-w-[200px] truncate cursor-pointer shadow-[0_1px_1px_rgba(0,0,0,0.01)]"
+            >
+              <span className="truncate">{formatHistoryDate(selectedDateStr)}</span>
+              <Calendar className="w-3.5 h-3.5 text-cp-text-secondary shrink-0" />
+            </button>
             
-            {/* newer date is closer to index 0 */}
+            {/* Newer date selector (goes right, decrements index) */}
             <button
               onClick={() => handleNavigateDate(-1)}
-              disabled={selectedDateIndex <= 0}
+              disabled={!canGoNewer}
               title="Newer date"
-              className="p-1.5 hover:bg-cp-accent-light text-cp-text-secondary hover:text-cp-accent disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border border-cp-border shrink-0"
+              className="p-1.5 hover:bg-cp-accent-light text-cp-text-secondary hover:text-cp-accent disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border border-cp-border shrink-0 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -212,6 +266,13 @@ const AttendanceHistory = () => {
           {historyLoading ? (
             <div className="py-8 flex items-center justify-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cp-accent"></div>
+            </div>
+          ) : history.length === 0 ? (
+            /* No data for the selected date */
+            <div className="text-center py-10 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
+              <Clock className="w-8 h-8 mx-auto text-cp-text-secondary/40" />
+              <p className="font-semibold text-cp-text-primary">No attendance records for this day</p>
+              <p className="text-[10px] text-cp-text-secondary">Try picking another date.</p>
             </div>
           ) : filteredHistory.length === 0 ? (
             /* Empty state when filter yields 0 matches */

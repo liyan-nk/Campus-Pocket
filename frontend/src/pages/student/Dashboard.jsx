@@ -206,21 +206,13 @@ const Dashboard = () => {
     return t.faculty;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 space-y-4 pb-2">
       
       {/* Header Profile Greeting */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">{getGreeting()}</p>
+          <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">{loading ? 'Loading...' : getGreeting()}</p>
           <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight leading-none mt-0.5">
             Hello, {user?.name?.split(' ')[0] || 'Student'}!
           </h2>
@@ -237,8 +229,28 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      {/* Overview stats: Schedule on left, Tasks on right */}
-      <div className="grid grid-cols-2 gap-2.5">
+      {loading ? (
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="h-12 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+            <div className="h-12 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-12 bg-cp-surface border border-cp-border rounded animate-pulse"></div>
+            <div className="h-28 bg-cp-surface border border-cp-border rounded-3xl animate-pulse"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-32 bg-cp-surface border border-cp-border rounded animate-pulse"></div>
+            <div className="space-y-2">
+              <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+              <div className="h-14 bg-cp-surface border border-cp-border rounded-2xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Overview stats: Schedule on left, Tasks on right */}
+          <div className="grid grid-cols-2 gap-2.5">
         <div className="flex items-center space-x-2.5 bg-cp-surface p-3 rounded-2xl border border-cp-border shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
           <Calendar className="w-4.5 h-4.5 text-cp-accent shrink-0" />
           <div className="text-xs min-w-0">
@@ -386,6 +398,8 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      </>
+      )}
 
     </div>
   );

@@ -201,13 +201,7 @@ const Profile = () => {
     return d;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cp-bg">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cp-accent"></div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="py-3 px-4 pb-2 space-y-3 flex flex-col w-full max-w-md mx-auto">
@@ -217,6 +211,18 @@ const Profile = () => {
         <h1 className="font-display text-lg font-extrabold tracking-tight text-cp-text-primary">Settings</h1>
         <p className="mt-0.5 text-cp-text-secondary text-[9px] font-bold uppercase tracking-wider">Campus Pocket</p>
       </div>
+
+      {loading ? (
+        <div className="space-y-4 py-4">
+          <div className="w-24 h-24 bg-cp-surface rounded-full mx-auto animate-pulse border border-cp-border"></div>
+          <div className="space-y-3">
+            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
+            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
+            <div className="h-12 bg-cp-surface border border-cp-border rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      ) : (
+        <>
 
       {/* Status alerts */}
       {error && (
@@ -482,6 +488,8 @@ const Profile = () => {
           Academic data is managed centrally by administrators.
         </span>
       </div>
+      </>
+      )}
     </div>
   );
 };
