@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
 import { Calendar, Clock, User, MapPin, AlertCircle } from 'lucide-react';
 import { formatTime12Hour } from '../../utils/dateUtils';
-import { getCachedData, setCachedData, isCacheValid } from '../../utils/dataCache';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import PullToRefresh from '../../components/PullToRefresh';
 
 const Timetable = () => {
@@ -21,16 +21,11 @@ const Timetable = () => {
     return daysOfWeek[dayIndex - 1];
   };
   const [activeDay, setActiveDay] = useState(getCurrentDayString());
-  
+
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showUpdatedToast, setShowUpdatedToast] = useState(false);
 
-  const fetchTimetable = async (force = false) => {
-    const username = user?.username;
-    if (!force && isCacheValid('timetable', username)) {
-      setLoading(false);
-      return;
-    }
+  const fetchTimetable = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/timetable`, {
         credentials: 'include'
@@ -38,12 +33,11 @@ const Timetable = () => {
       if (response.ok) {
         const data = await response.json();
         setTimetable(data);
-        setCachedData('timetable', username, data);
+        setCachedData('timetable', user?.username, data);
         setError('');
       } else {
         const errData = await response.json().catch(() => ({}));
-        const msg = errData.message || `Failed to load timetable.`;
-        setError(msg);
+        setError(errData.message || 'Failed to load timetable.');
       }
     } catch (err) {
       setError('Connection error. Failed to load timetable.');
@@ -53,11 +47,21 @@ const Timetable = () => {
   };
 
   useEffect(() => {
+    if (!user?.username) return;
+
+    // Load initial cache once user credentials exist
+    const cached = getCachedData('timetable', user.username);
+    if (cached) {
+      setTimetable(cached);
+      setLoading(false);
+    }
+
+    // Always fetch backend data silently
     fetchTimetable();
 
     const goOnline = () => {
       setIsOffline(false);
-      fetchTimetable(true);
+      fetchTimetable();
     };
     const goOffline = () => setIsOffline(true);
 
@@ -71,7 +75,7 @@ const Timetable = () => {
   }, [user]);
 
   const handlePullRefresh = async () => {
-    await fetchTimetable(true);
+    await fetchTimetable();
     setShowUpdatedToast(true);
     setTimeout(() => setShowUpdatedToast(false), 2000);
   };
@@ -116,7 +120,7 @@ const Timetable = () => {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="p-4 space-y-4 pb-2">
+      <div className="p-4 space-y-4 pb-2 animate-fadeIn">
         
         {/* Offline Warning Banner */}
         {isOffline && (
@@ -141,7 +145,7 @@ const Timetable = () => {
         )}
 
         {/* Day Select Scroller */}
-        <div className="flex space-x-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 select-none">
+        <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 select-none">
           {daysOfWeek.map((day) => {
             const isToday = getCurrentDayString() === day;
             const isActive = activeDay === day;
@@ -150,10 +154,10 @@ const Timetable = () => {
               <button
                 key={day}
                 onClick={() => setActiveDay(day)}
-                className={`px-3.5 py-2 rounded-xl text-[9px] font-bold tracking-wider uppercase transition-all shrink-0 flex items-center border ${
+                className={`px-3.5 py-2 rounded-xl font-display text-xs font-bold shrink-0 transition-all ${
                   isActive
-                    ? 'bg-cp-accent text-cp-text-on-accent border-cp-accent shadow-sm'
-                    : 'bg-cp-surface text-cp-text-secondary border-cp-border hover:text-cp-text-primary'
+                    ? 'bg-cp-accent text-cp-text-on-accent shadow-sm'
+                    : 'bg-cp-surface text-cp-text-secondary border border-cp-border hover:border-cp-accent/30 shadow-[0_1px_2px_rgba(0,0,0,0.01)]'
                 }`}
               >
                 {day.substring(0, 3)}
@@ -166,7 +170,7 @@ const Timetable = () => {
         {/* Class Slots Cards List */}
         <div className="space-y-3">
           {filteredSlots.length === 0 ? (
-            <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="text-center py-12 bg-cp-surface border border-cp-border border-dashed rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn">
               <Calendar className="w-6 h-6 mx-auto text-cp-text-secondary/55" />
               <p>No classes scheduled for {activeDay}.</p>
             </div>
@@ -177,7 +181,7 @@ const Timetable = () => {
               .map((slot) => (
                 <div 
                   key={slot.id} 
-                  className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                  className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn"
                 >
                   {/* Header section */}
                   <div className="flex items-start justify-between">
@@ -190,23 +194,23 @@ const Timetable = () => {
                       </p>
                     </div>
                     {slot.room && (
-                      <div className="px-2 py-1 bg-cp-accent-light rounded-xl text-cp-accent text-[10px] font-extrabold border border-cp-border shrink-0">
+                      <div className="px-2 py-0.5 bg-cp-accent-light text-cp-text-primary font-display font-extrabold text-[10px] rounded-lg border border-cp-border-light shrink-0">
                         {slot.room}
                       </div>
                     )}
                   </div>
 
-                  {/* Faculty & Hours Info */}
-                  <div className="flex items-center justify-between text-[10px] text-cp-text-secondary pt-2 border-t border-cp-border/50">
+                  {/* Time slots and class room details footer */}
+                  <div className="flex items-center justify-between text-[11px] text-cp-text-secondary border-t border-cp-border-light pt-2.5">
                     <div className="flex items-center">
-                      <Clock className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/80 shrink-0" />
-                      <span className="font-mono">
+                      <Clock className="w-3.5 h-3.5 mr-1.5 text-cp-text-secondary/60" />
+                      <span className="font-mono font-medium text-cp-text-primary">
                         {formatTime12Hour(slot.startTime)} - {formatTime12Hour(slot.endTime)}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <User className="w-3.5 h-3.5 mr-1 text-cp-text-secondary/60 shrink-0" />
-                      <span className="font-semibold text-cp-text-primary">{getFacultyName(slot)}</span>
+                      <span className="font-semibold text-cp-text-primary truncate max-w-[80px]">{getFacultyName(slot)}</span>
                     </div>
                   </div>
                 </div>

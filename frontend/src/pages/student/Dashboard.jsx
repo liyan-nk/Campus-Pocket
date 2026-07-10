@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../../config/api';
 import { parseLocalDate, formatTime12Hour } from '../../utils/dateUtils';
-import { getCachedData, setCachedData, isCacheValid, invalidateCache } from '../../utils/dataCache';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import PullToRefresh from '../../components/PullToRefresh';
 import { 
   Sparkles, Calendar, BookOpen, Clock, MapPin, 
@@ -28,12 +28,7 @@ const Dashboard = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const fetchDashboardData = async (targetDate, force = false) => {
-    const username = user?.username;
-    if (!force && isCacheValid('dashboard', username)) {
-      setLoading(false);
-      return;
-    }
+  const fetchDashboardData = async (targetDate) => {
     const dateToUse = (targetDate instanceof Date) ? targetDate : new Date();
     try {
       const dateStr = getLocalDateString(dateToUse);
@@ -48,11 +43,11 @@ const Dashboard = () => {
       if (response.ok) {
         const result = await response.json();
         setData(result);
-        setCachedData('dashboard', username, result);
+        setCachedData('dashboard', user?.username, result);
         setError('');
       } else {
         const errData = await response.json().catch(() => ({}));
-        setError(errData.message || `Failed to load dashboard data.`);
+        setError(errData.message || 'Failed to load dashboard.');
       }
     } catch (err) {
       setError('Connection error. Failed to load dashboard.');
@@ -62,6 +57,16 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    if (!user?.username) return;
+
+    // Load initial cache once user credentials exist
+    const cached = getCachedData('dashboard', user.username);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    }
+    
+    // Always trigger background fetch immediately
     fetchDashboardData(new Date());
 
     const intervalId = setInterval(() => {
@@ -86,7 +91,7 @@ const Dashboard = () => {
 
     const goOnline = () => {
       setIsOffline(false);
-      fetchDashboardData(new Date(), true);
+      fetchDashboardData(new Date());
     };
     const goOffline = () => setIsOffline(true);
 
@@ -112,7 +117,7 @@ const Dashboard = () => {
     setError('');
     const previousData = { ...data };
 
-    // Optimistically update state
+    // Optimistic UI updates
     const updatedTodayClasses = (data?.todayClasses || []).map(cls => {
       if (cls?.timetable?.id === timetableId) {
         return {
@@ -123,10 +128,13 @@ const Dashboard = () => {
       return cls;
     });
 
-    setData(prev => ({
-      ...prev,
+    const updatedData = {
+      ...data,
       todayClasses: updatedTodayClasses
-    }));
+    };
+
+    setData(updatedData);
+    setCachedData('dashboard', user?.username, updatedData);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/attendance/mark`, {
@@ -145,13 +153,8 @@ const Dashboard = () => {
         throw new Error(result.message || 'Failed to mark attendance.');
       }
 
-      // Sync active cache & invalidate dependent statistics
-      setCachedData('dashboard', user?.username, {
-        ...data,
-        todayClasses: updatedTodayClasses
-      });
-      invalidateCache('attendanceSummary', user?.username);
-      
+      // Re-fetch fresh data to sync other tabs
+      fetchDashboardData(currentDate);
     } catch (err) {
       setError(err.message);
       // Rollback to previous state
@@ -160,7 +163,7 @@ const Dashboard = () => {
   };
 
   const handlePullRefresh = async () => {
-    await fetchDashboardData(new Date(), true);
+    await fetchDashboardData(new Date());
     setShowUpdatedToast(true);
     setTimeout(() => setShowUpdatedToast(false), 2000);
   };
@@ -263,7 +266,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">{getGreeting()}</p>
-            <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight leading-none mt-0.5">
+            <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight leading-none mt-0.5 animate-slideDown">
               Hello, {user?.name?.split(' ')[0] || 'Student'}!
             </h2>
           </div>
@@ -272,7 +275,7 @@ const Dashboard = () => {
             className="w-10 h-10 bg-cp-accent-light rounded-full flex items-center justify-center text-cp-text-primary font-display font-extrabold border border-cp-border overflow-hidden transition-all duration-200 active:scale-95 hover:opacity-90 cursor-pointer shrink-0"
           >
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover animate-fadeIn" />
             ) : (
               <span>{user?.name?.charAt(0) || 'S'}</span>
             )}
@@ -307,16 +310,16 @@ const Dashboard = () => {
         <div className="space-y-2">
           <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">Next Up</h3>
           {data?.nextClass ? (
-            <div className="bg-cp-accent text-cp-text-on-accent rounded-3xl p-4 shadow-md border border-cp-border/10 space-y-3">
+            <div className="bg-cp-accent text-cp-text-on-accent rounded-3xl p-4 shadow-md border border-cp-border/10 space-y-3 animate-fadeIn">
               <div className="flex items-start justify-between">
                 <div className="space-y-1 min-w-0 pr-2 flex-grow">
                   <span className="px-2 py-0.5 bg-cp-text-on-accent/10 backdrop-blur-md rounded-lg text-[9px] font-bold uppercase tracking-wider">
                     Upcoming
                   </span>
-                  <h4 className="text-base font-display font-extrabold tracking-tight mt-1 leading-tight">
+                  <h4 className="text-base font-display font-extrabold tracking-tight mt-1 leading-tight truncate">
                     {getSubjectName(data.nextClass?.timetable)}
                   </h4>
-                  <p className="text-[10px] font-mono text-cp-text-on-accent/60 font-bold tracking-wider uppercase">
+                  <p className="text-[10px] font-mono text-cp-text-on-accent/60 font-bold tracking-wider uppercase truncate">
                     {getSubjectCode(data.nextClass?.timetable)}
                   </p>
                 </div>
@@ -334,7 +337,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center">
                   <User className="w-3.5 h-3.5 mr-1 text-cp-text-on-accent/60" />
-                  <span>{getFacultyName(data.nextClass?.timetable)}</span>
+                  <span className="truncate max-w-[80px]">{getFacultyName(data.nextClass?.timetable)}</span>
                 </div>
               </div>
             </div>
@@ -343,7 +346,7 @@ const Dashboard = () => {
               Classes completed for today 🎉
             </div>
           ) : (
-            <div className="bg-cp-surface border border-cp-border rounded-3xl p-4 text-center text-xs text-cp-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="bg-cp-surface border border-cp-border rounded-3xl p-4 text-center text-xs text-cp-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn">
               No upcoming classes scheduled for today. Enjoy!
             </div>
           )}
@@ -354,7 +357,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-bold text-cp-text-secondary uppercase tracking-wider">Today's Class Checklist</h3>
             <button 
-              onClick={() => fetchDashboardData(new Date(), true)}
+              onClick={() => fetchDashboardData(new Date())}
               title="Refresh dashboard"
               className="p-1 hover:bg-cp-accent-light text-cp-text-secondary hover:text-cp-accent rounded-lg transition-all border border-transparent hover:border-cp-border"
             >
@@ -393,7 +396,7 @@ const Dashboard = () => {
                       <h4 className="text-xs font-bold text-cp-text-primary truncate">{getSubjectName(cls?.timetable)}</h4>
                       <div className="flex items-center space-x-2 text-[10px] text-cp-text-secondary">
                         <span className="font-mono flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
+                          <Clock className="w-3 h-3 mr-1 animate-pulse" />
                           {formatTime12Hour(cls?.timetable?.startTime)}
                         </span>
                         <span className="flex items-center">

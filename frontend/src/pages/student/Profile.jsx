@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/api';
-import { getCachedData, setCachedData, isCacheValid } from '../../utils/dataCache';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import { 
   User, Phone, GraduationCap, Layers, KeyRound, 
   LogOut, ShieldAlert, CheckCircle, Sun, Moon,
-  Camera, Trash2, Loader2, AlertCircle
+  Camera, RefreshCw, Trash2, AlertCircle
 } from 'lucide-react';
 
 const Profile = () => {
   const { 
-    user, 
+    user,
     logout, 
-    changePassword,
+    changePassword, 
     updateAvatar 
   } = useAuth();
   
@@ -21,59 +21,80 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
-  // Avatar states
-  const [showAvatarEdit, setShowAvatarEdit] = useState(false);
-  const [submittingImage, setSubmittingImage] = useState(false);
-
-  // Password fields
+  // Password change states
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submittingPassword, setSubmittingPassword] = useState(false);
 
-  // Dark mode setting state
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+  // Avatar edit accordion toggle
+  const [showAvatarEdit, setShowAvatarEdit] = useState(false);
+  const [submittingImage, setSubmittingImage] = useState(false);
+
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Theme state
+  const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem('cp_theme') === 'dark';
+      return localStorage.getItem('theme') || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     } catch (e) {
-      return false;
+      return 'light';
     }
   });
 
-  const fetchProfile = async (force = false) => {
-    const username = user?.username;
-    if (!force && isCacheValid('profile', username)) {
-      setLoading(false);
-      return;
+  // Toggle theme
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {
+      console.warn('localStorage theme save failed:', e);
     }
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  // Fetch student profile details
+  const fetchProfile = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/profile`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
-        setCachedData('profile', username, data);
-        setError('');
+        setCachedData('profile', user?.username, data);
       } else {
         const errData = await response.json().catch(() => ({}));
-        const msg = errData.message || `Failed to load profile data.`;
-        setError(msg);
+        setError(errData.message || 'Failed to load profile details.');
       }
     } catch (err) {
-      setError(`Connection error. Failed to load profile.`);
+      setError('Connection error. Failed to load profile.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!user?.username) return;
+
+    // Load initial cache once user credentials exist
+    const cached = getCachedData('profile', user.username);
+    if (cached) {
+      setProfile(cached);
+      setLoading(false);
+    }
+
+    // Always fetch backend details
     fetchProfile();
 
     const goOnline = () => {
       setIsOffline(false);
-      fetchProfile(true);
+      fetchProfile();
     };
     const goOffline = () => setIsOffline(true);
 
@@ -85,21 +106,6 @@ const Profile = () => {
       window.removeEventListener('offline', goOffline);
     };
   }, [user]);
-
-  // Dark Mode Toggle Trigger
-  const handleToggleTheme = () => {
-    const nextDark = !isDarkMode;
-    setIsDarkMode(nextDark);
-    try {
-      if (nextDark) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('cp_theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('cp_theme', 'light');
-      }
-    } catch (e) {}
-  };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -140,17 +146,17 @@ const Profile = () => {
     }
   };
 
-  // Client-side canvas square crop and resize (512x512) webp uploader
+  // Client-side canvas square crop and resize (512x512) webp compressor
   const handleImageUpload = (e) => {
     if (isOffline) {
-      setError('Cannot upload avatar while offline.');
+      setError('Cannot upload photo while offline.');
       return;
     }
     const file = e.target.files[0];
     if (!file) return;
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError('Invalid format. Only JPEG, PNG, and WEBP files are allowed.');
+      setError('Please upload a valid image file (JPEG, PNG, or WEBP).');
       return;
     }
 
@@ -212,7 +218,7 @@ const Profile = () => {
 
   const handleRemoveImage = async () => {
     if (isOffline) {
-      setError('Cannot remove avatar while offline.');
+      setError('Cannot remove photo while offline.');
       return;
     }
     try {
@@ -277,7 +283,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="py-3 px-4 pb-2 space-y-3 flex flex-col w-full max-w-md mx-auto">
+    <div className="py-3 px-4 pb-2 space-y-3 flex flex-col w-full max-w-md mx-auto animate-fadeIn">
       
       {/* Settings Header */}
       <div className="pt-10 pb-1 text-center relative flex flex-col items-center justify-center">
@@ -310,7 +316,7 @@ const Profile = () => {
       {profile && (
         <>
           {/* User Card */}
-          <div className="flex items-center justify-between p-3 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <div className="flex items-center justify-between p-3 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn">
             <div className="flex items-center space-x-3 truncate">
               <div className="w-11 h-11 shrink-0 bg-cp-accent-light rounded-full flex items-center justify-center text-cp-text-primary font-display font-extrabold text-base border border-cp-border overflow-hidden">
                 {user?.avatarUrl ? (
@@ -329,7 +335,7 @@ const Profile = () => {
               type="button"
               disabled={isOffline}
               onClick={() => setShowAvatarEdit(!showAvatarEdit)}
-              className={`px-2.5 py-1 text-[10px] font-bold text-cp-text-primary hover:text-cp-accent bg-cp-bg hover:bg-cp-accent-light border border-cp-border rounded-lg transition-all active:scale-95 shrink-0 cursor-pointer ${isOffline ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`px-2.5 py-1 text-[10px] font-bold text-cp-text-primary hover:text-cp-accent bg-cp-bg hover:bg-cp-accent-light border border-cp-border rounded-lg transition-all active:scale-95 shrink-0 ${isOffline ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
               Edit Photo
             </button>
@@ -356,7 +362,7 @@ const Profile = () => {
                     type="button"
                     onClick={handleRemoveImage}
                     disabled={isOffline || submittingImage}
-                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
+                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg transition-all disabled:opacity-40"
                     title="Remove profile image"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -367,7 +373,7 @@ const Profile = () => {
           )}
 
           {/* Academic block */}
-          <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-3">
+          <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-3 animate-fadeIn">
             <h3 className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider">Academic</h3>
             
             <div className="grid grid-cols-3 gap-2 pt-0.5 text-center">
@@ -376,7 +382,7 @@ const Profile = () => {
                 <p className="text-xs font-bold text-cp-text-primary mt-0.5">{cleanDept(profile.department)}</p>
               </div>
               <div className="p-2 bg-cp-bg border border-cp-border-light rounded-xl">
-                <p className="text-[9px] text-cp-text-secondary font-bold uppercase tracking-wide">Semester</p>
+                <p className="text-[9px] text-cp-text-secondary font-bold uppercase tracking-wide">Sem</p>
                 <p className="text-xs font-bold text-cp-text-primary mt-0.5">{cleanSemester(profile.semester)}</p>
               </div>
               <div className="p-2 bg-cp-bg border border-cp-border-light rounded-xl">
@@ -384,96 +390,117 @@ const Profile = () => {
                 <p className="text-xs font-bold text-cp-text-primary mt-0.5">{cleanBatch(profile.batch)}</p>
               </div>
             </div>
-          </div>
-
-          {/* Device Profile info */}
-          <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-2.5">
-            <h3 className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider">Student Contact</h3>
-            <div className="space-y-2 pt-0.5">
-              <div className="flex items-center space-x-3 text-xs">
-                <Phone className="w-3.5 h-3.5 text-cp-text-secondary shrink-0" />
-                <span className="text-cp-text-secondary">Phone:</span>
-                <span className="font-semibold text-cp-text-primary">{profile.phone}</span>
-              </div>
+            
+            <div className="border-t border-cp-border-light pt-2 flex items-center justify-between text-xs px-0.5">
+              <span className="text-cp-text-secondary font-medium flex items-center">
+                <Phone className="w-3.5 h-3.5 mr-2 text-cp-text-secondary/60" />
+                Phone
+              </span>
+              <span className="font-mono text-cp-text-primary font-semibold">{profile.phone}</span>
             </div>
-          </div>
-
-          {/* Theme toggler card */}
-          <div className="flex items-center justify-between p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            <div className="flex items-center space-x-3 text-xs">
-              {isDarkMode ? (
-                <Moon className="w-4 h-4 text-cp-accent shrink-0 animate-pulse" />
-              ) : (
-                <Sun className="w-4 h-4 text-amber-500 shrink-0" />
-              )}
-              <div className="text-left">
-                <p className="font-bold text-cp-text-primary">Interface Theme</p>
-                <p className="text-[9px] text-cp-text-secondary font-medium">Switch between light and dark look</p>
-              </div>
-            </div>
-            <button
-              onClick={handleToggleTheme}
-              className="px-2.5 py-1 text-[10px] font-bold text-cp-text-primary hover:text-cp-accent bg-cp-bg hover:bg-cp-accent-light border border-cp-border rounded-lg transition-all active:scale-95 cursor-pointer shrink-0"
-            >
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </button>
-          </div>
-
-          {/* Update password triggers block */}
-          <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 text-xs">
-                <KeyRound className="w-4 h-4 text-cp-text-secondary shrink-0" />
-                <span className="font-bold text-cp-text-primary">Change Password</span>
-              </div>
-              <button
-                type="button"
-                disabled={isOffline}
-                onClick={() => setShowPasswordForm(!showPasswordForm)}
-                className={`px-2.5 py-1 text-[10px] font-bold text-cp-text-primary hover:text-cp-accent bg-cp-bg hover:bg-cp-accent-light border border-cp-border rounded-lg transition-all active:scale-95 shrink-0 cursor-pointer ${isOffline ? 'opacity-40 cursor-not-allowed' : ''}`}
-              >
-                {showPasswordForm ? 'Cancel' : 'Modify'}
-              </button>
-            </div>
-
-            {showPasswordForm && (
-              <form onSubmit={handlePasswordSubmit} className="space-y-3 pt-2 animate-fadeIn border-t border-cp-border/50">
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    placeholder="Current Password"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
-                  />
-                  <input
-                    type="password"
-                    placeholder="New Password (min 6 characters)"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-cp-bg border border-cp-border rounded-xl focus:border-cp-accent/50 outline-none text-cp-text-primary"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submittingPassword}
-                  className="w-full py-2 bg-cp-accent text-cp-text-on-accent font-bold text-xs rounded-xl hover:opacity-90 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
-                >
-                  {submittingPassword ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Update Password</span>}
-                </button>
-              </form>
-            )}
           </div>
         </>
       )}
+
+      {/* Settings block */}
+      <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-3">
+        <h3 className="text-[9px] font-bold text-cp-text-secondary uppercase tracking-wider">Appearance</h3>
+        
+        {/* Theme Toggle option */}
+        <div className="flex items-center justify-between py-0.5">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-cp-bg rounded-xl text-cp-text-secondary border border-cp-border-light">
+              {theme === 'dark' ? <Moon className="w-3.5 h-3.5 animate-pulse" /> : <Sun className="w-3.5 h-3.5" />}
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-cp-text-primary">Dark Mode</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
+              theme === 'dark' ? 'bg-cp-accent' : 'bg-cp-accent-light'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-cp-surface shadow-md transition duration-200 ease-in-out ${
+                theme === 'dark' ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="border-t border-cp-border-light pt-2"></div>
+
+        {/* Change Password toggle/button */}
+        {showPasswordForm ? (
+          <form onSubmit={handlePasswordSubmit} className="space-y-3 pt-1">
+            <h4 className="text-xs font-bold text-cp-text-primary flex items-center">
+              <KeyRound className="w-3.5 h-3.5 mr-2 text-cp-text-secondary/60" />
+              Change Password
+            </h4>
+            
+            <div className="space-y-2">
+              <input
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Current Password"
+                className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+                disabled={submittingPassword}
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New Password (min 6 chars)"
+                className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+                disabled={submittingPassword}
+              />
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm New Password"
+                className="w-full px-3 py-2 bg-cp-bg border border-cp-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-cp-accent text-cp-text-primary placeholder-cp-text-secondary"
+                disabled={submittingPassword}
+              />
+            </div>
+
+            <div className="flex space-x-2 pt-1">
+              <button
+                type="submit"
+                disabled={submittingPassword}
+                className="w-1/2 py-2 bg-cp-accent hover:bg-cp-accent-hover text-cp-text-on-accent font-semibold text-[10px] rounded-xl transition-all"
+              >
+                {submittingPassword ? 'Saving...' : 'Update'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPasswordForm(false)}
+                className="w-1/2 py-2 bg-cp-bg hover:bg-cp-accent-light text-cp-text-primary font-semibold text-[10px] rounded-xl transition-all border border-cp-border"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            disabled={isOffline}
+            onClick={() => {
+              setShowPasswordForm(true);
+              setError('');
+              setSuccess('');
+            }}
+            className={`w-full py-2 border border-dashed border-cp-border hover:border-cp-accent text-cp-text-secondary hover:text-cp-text-primary font-semibold rounded-xl text-xs transition-all flex items-center justify-center space-x-2 ${isOffline ? 'opacity-40 cursor-not-allowed' : ''}`}
+          >
+            <KeyRound className="w-3.5 h-3.5 text-cp-text-secondary/60" />
+            <span>Change Password</span>
+          </button>
+        )}
+      </div>
 
       {/* Danger block */}
       <div className="p-3.5 bg-cp-surface rounded-2xl border border-cp-border-light shadow-[0_1px_2px_rgba(0,0,0,0.01)] space-y-3">
@@ -481,7 +508,7 @@ const Profile = () => {
         <button
           type="button"
           onClick={logout}
-          className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-display font-semibold rounded-xl transition-all flex items-center justify-center space-x-2 border border-red-500/20 text-xs cursor-pointer"
+          className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-display font-semibold rounded-xl transition-all flex items-center justify-center space-x-2 border border-red-500/20 text-xs"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>

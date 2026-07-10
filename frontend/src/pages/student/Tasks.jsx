@@ -5,7 +5,7 @@ import {
   Plus, Trash2, Calendar, AlertCircle, CheckCircle2, ListTodo, X, Edit2, Loader2 
 } from 'lucide-react';
 import { parseLocalDate } from '../../utils/dateUtils';
-import { getCachedData, setCachedData, isCacheValid, invalidateCache } from '../../utils/dataCache';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import PullToRefresh from '../../components/PullToRefresh';
 
 const Tasks = () => {
@@ -15,7 +15,7 @@ const Tasks = () => {
   const [loading, setLoading] = useState(() => !getCachedData('tasks', user?.username));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showUpdatedToast, setShowUpdatedToast] = useState(false);
 
@@ -31,12 +31,7 @@ const Tasks = () => {
   // Submit button loader
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchTasks = async (force = false) => {
-    const username = user?.username;
-    if (!force && isCacheValid('tasks', username)) {
-      setLoading(false);
-      return;
-    }
+  const fetchTasks = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks`, {
         credentials: 'include'
@@ -44,7 +39,7 @@ const Tasks = () => {
       if (response.ok) {
         const data = await response.json();
         setTasks(data);
-        setCachedData('tasks', username, data);
+        setCachedData('tasks', user?.username, data);
         setError('');
       } else {
         setError('Failed to fetch tasks.');
@@ -57,11 +52,21 @@ const Tasks = () => {
   };
 
   useEffect(() => {
+    if (!user?.username) return;
+
+    // Load initial cache once user credentials exist
+    const cached = getCachedData('tasks', user.username);
+    if (cached) {
+      setTasks(cached);
+      setLoading(false);
+    }
+
+    // Always fetch backend data silently
     fetchTasks();
 
     const goOnline = () => {
       setIsOffline(false);
-      fetchTasks(true);
+      fetchTasks();
     };
     const goOffline = () => setIsOffline(true);
 
@@ -75,7 +80,7 @@ const Tasks = () => {
   }, [user]);
 
   const handlePullRefresh = async () => {
-    await fetchTasks(true);
+    await fetchTasks();
     setShowUpdatedToast(true);
     setTimeout(() => setShowUpdatedToast(false), 2000);
   };
@@ -104,20 +109,15 @@ const Tasks = () => {
       });
 
       if (response.ok) {
-        const newTask = await response.json();
-        const updatedList = [...tasks, newTask];
-        setTasks(updatedList);
-        setCachedData('tasks', user?.username, updatedList);
-        
-        // Force refresh dependent counts
-        invalidateCache('dashboard', user?.username);
-
         setTitle('');
         setDescription('');
         setDueDate('');
         setShowCreateForm(false);
         setSuccess('Task created successfully!');
         setTimeout(() => setSuccess(''), 3000);
+
+        // Fetch fresh list to sync state & cache
+        fetchTasks();
       } else {
         const errData = await response.json().catch(() => ({}));
         setError(errData.message || 'Failed to create task.');
@@ -146,6 +146,7 @@ const Tasks = () => {
       return t;
     });
     setTasks(updatedList);
+    setCachedData('tasks', user?.username, updatedList);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks/${task.id}/toggle`, {
@@ -154,14 +155,14 @@ const Tasks = () => {
       });
 
       if (response.ok) {
-        setCachedData('tasks', user?.username, updatedList);
-        invalidateCache('dashboard', user?.username);
+        fetchTasks();
       } else {
         throw new Error('Failed to update task.');
       }
     } catch (err) {
       setError(err.message || 'Connection error.');
       setTasks(originalTasks);
+      setCachedData('tasks', user?.username, originalTasks);
     }
   };
 
@@ -189,18 +190,14 @@ const Tasks = () => {
       });
 
       if (response.ok) {
-        const updatedTask = await response.json();
-        const updatedList = tasks.map(t => t.id === editingTask.id ? updatedTask : t);
-        setTasks(updatedList);
-        setCachedData('tasks', user?.username, updatedList);
-        invalidateCache('dashboard', user?.username);
-
         setEditingTask(null);
         setTitle('');
         setDescription('');
         setDueDate('');
         setSuccess('Task updated successfully!');
         setTimeout(() => setSuccess(''), 3000);
+
+        fetchTasks();
       } else {
         const errData = await response.json().catch(() => ({}));
         setError(errData.message || 'Failed to update task.');
@@ -224,6 +221,7 @@ const Tasks = () => {
     // Optimistic delete
     const updatedList = tasks.filter(t => t.id !== taskId);
     setTasks(updatedList);
+    setCachedData('tasks', user?.username, updatedList);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/tasks/${taskId}`, {
@@ -232,14 +230,14 @@ const Tasks = () => {
       });
 
       if (response.ok) {
-        setCachedData('tasks', user?.username, updatedList);
-        invalidateCache('dashboard', user?.username);
+        fetchTasks();
       } else {
         throw new Error('Failed to delete task.');
       }
     } catch (err) {
       setError(err.message || 'Connection error.');
       setTasks(originalTasks);
+      setCachedData('tasks', user?.username, originalTasks);
     }
   };
 
@@ -300,7 +298,7 @@ const Tasks = () => {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="p-4 space-y-4 pb-2">
+      <div className="p-4 space-y-4 pb-2 animate-fadeIn">
         
         {/* Offline Warning Banner */}
         {isOffline && (
@@ -314,7 +312,7 @@ const Tasks = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
-            <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Personal Tasks</h2>
+            <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5 animate-slideDown">Personal Tasks</h2>
           </div>
           <button
             onClick={startCreateTask}
@@ -437,7 +435,7 @@ const Tasks = () => {
 
         {/* LIST OF TASKS */}
         {tasks.length === 0 ? (
-          <div className="text-center py-12 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4">
+          <div className="text-center py-12 bg-cp-surface border border-cp-border rounded-3xl text-xs text-cp-text-secondary space-y-1 shadow-[0_1px_2px_rgba(0,0,0,0.01)] px-4 animate-fadeIn">
             <ListTodo className="w-7 h-7 mx-auto text-cp-text-secondary/50" />
             <p className="font-bold text-cp-text-primary">No tasks pending</p>
             <p className="text-[10px] text-cp-text-secondary">Click the '+' button above to add a task.</p>
@@ -447,7 +445,7 @@ const Tasks = () => {
             {tasks.map((task) => (
               <div 
                 key={task.id} 
-                className={`p-3.5 bg-cp-surface border rounded-2xl flex items-center justify-between hover:border-cp-accent/20 transition-all duration-300 shadow-[0_1px_2px_rgba(0,0,0,0.01)] ${
+                className={`p-3.5 bg-cp-surface border rounded-2xl flex items-center justify-between hover:border-cp-accent/20 transition-all duration-300 shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn ${
                   task.completed ? 'border-cp-border/50 opacity-60' : 'border-cp-border'
                 }`}
               >
@@ -461,7 +459,7 @@ const Tasks = () => {
                   />
                   <div className="space-y-0.5 min-w-0" onClick={() => !task.completed && startEditTask(task)}>
                     <h4 className={`text-xs font-bold text-cp-text-primary truncate leading-snug ${
-                      task.completed ? 'line-through text-cp-text-secondary' : 'cursor-pointer hover:text-cp-accent'
+                      task.completed ? 'line-through text-cp-text-secondary animate-pulse' : 'cursor-pointer hover:text-cp-accent'
                     }`}>
                       {task.title}
                     </h4>

@@ -5,7 +5,7 @@ import API_BASE_URL from '../../config/api';
 import { 
   AlertCircle, CheckCircle2, BarChart2, Clock, ChevronRight 
 } from 'lucide-react';
-import { getCachedData, setCachedData, isCacheValid } from '../../utils/dataCache';
+import { getCachedData, setCachedData } from '../../utils/dataCache';
 import PullToRefresh from '../../components/PullToRefresh';
 
 const Attendance = () => {
@@ -15,16 +15,11 @@ const Attendance = () => {
   const [summary, setSummary] = useState(() => getCachedData('attendanceSummary', user?.username));
   const [loading, setLoading] = useState(() => !getCachedData('attendanceSummary', user?.username));
   const [error, setError] = useState('');
-  
+
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showUpdatedToast, setShowUpdatedToast] = useState(false);
 
-  const fetchAttendanceSummary = async (force = false) => {
-    const username = user?.username;
-    if (!force && isCacheValid('attendanceSummary', username)) {
-      setLoading(false);
-      return;
-    }
+  const fetchAttendanceSummary = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/student/attendance/summary`, { 
         credentials: 'include' 
@@ -32,12 +27,11 @@ const Attendance = () => {
       if (response.ok) {
         const data = await response.json();
         setSummary(data);
-        setCachedData('attendanceSummary', username, data);
+        setCachedData('attendanceSummary', user?.username, data);
         setError('');
       } else {
         const errData = await response.json().catch(() => ({}));
-        const msg = errData.message || `Failed to load attendance summary.`;
-        setError(msg);
+        setError(errData.message || 'Failed to load attendance summary.');
       }
     } catch (err) {
       setError('Connection error. Failed to load attendance.');
@@ -47,11 +41,21 @@ const Attendance = () => {
   };
 
   useEffect(() => {
+    if (!user?.username) return;
+
+    // Load initial cache once user credentials exist
+    const cached = getCachedData('attendanceSummary', user.username);
+    if (cached) {
+      setSummary(cached);
+      setLoading(false);
+    }
+
+    // Always fetch backend data silently
     fetchAttendanceSummary();
 
     const goOnline = () => {
       setIsOffline(false);
-      fetchAttendanceSummary(true);
+      fetchAttendanceSummary();
     };
     const goOffline = () => setIsOffline(true);
 
@@ -65,7 +69,7 @@ const Attendance = () => {
   }, [user]);
 
   const handlePullRefresh = async () => {
-    await fetchAttendanceSummary(true);
+    await fetchAttendanceSummary();
     setShowUpdatedToast(true);
     setTimeout(() => setShowUpdatedToast(false), 2000);
   };
@@ -94,7 +98,7 @@ const Attendance = () => {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="p-4 space-y-4 pb-2">
+      <div className="p-4 space-y-4 pb-2 animate-fadeIn">
         
         {/* Offline Warning Banner */}
         {isOffline && (
@@ -107,7 +111,7 @@ const Attendance = () => {
         {/* Header */}
         <div>
           <p className="text-cp-text-secondary text-[10px] font-bold uppercase tracking-wider">Academic Tracker</p>
-          <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5">Attendance Insights</h2>
+          <h2 className="text-xl font-display font-extrabold text-cp-text-primary tracking-tight mt-0.5 animate-slideDown">Attendance Insights</h2>
         </div>
 
         {/* Errors Alert */}
@@ -130,7 +134,7 @@ const Attendance = () => {
             
             {/* Health counts */}
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="flex items-center space-x-3 bg-cp-surface p-3.5 rounded-2xl border border-cp-border shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center space-x-3 bg-cp-surface p-3.5 rounded-2xl border border-cp-border shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn">
                 <div className="w-8 h-8 bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center text-green-600 text-[10px] font-extrabold shrink-0">
                   {safeCount}
                 </div>
@@ -140,7 +144,7 @@ const Attendance = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 bg-cp-surface p-3.5 rounded-2xl border border-cp-border shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center space-x-3 bg-cp-surface p-3.5 rounded-2xl border border-cp-border shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn">
                 <div className="w-8 h-8 bg-red-500/10 rounded-xl border border-red-500/20 flex items-center justify-center text-red-600 text-[10px] font-extrabold shrink-0">
                   {attentionCount}
                 </div>
@@ -170,7 +174,7 @@ const Attendance = () => {
                 return (
                   <div 
                     key={idx}
-                    className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                    className="bg-cp-surface border border-cp-border hover:border-cp-accent/30 rounded-3xl p-4 hover:shadow-sm transition-all duration-300 space-y-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)] animate-fadeIn"
                   >
                     {/* Header: Title and Percentage badge */}
                     <div className="flex items-start justify-between">
@@ -209,7 +213,7 @@ const Attendance = () => {
                       {isSafe ? (
                         canMiss > 0 ? (
                           <div className="flex items-center text-green-600 font-semibold space-x-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <CheckCircle2 className="w-3.5 h-3.5 animate-bounce" />
                             <span>Can miss {canMiss} class{canMiss > 1 ? 'es' : ''}</span>
                           </div>
                         ) : (
